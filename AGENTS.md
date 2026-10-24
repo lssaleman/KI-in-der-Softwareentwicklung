@@ -192,6 +192,26 @@ Refer to the log file by its path.
 - The website is responsive and works on mobile devices first.
 - Layouts must work from a screen width of 320 px up to desktop size.
 
+## Performance Checks
+ 
+The performance criteria in `SPEC.md` (N5) require a Lighthouse measurement.
+Lighthouse is not installed in the project.
+ 
+- Ask the client whether you may install or run Lighthouse to measure the
+  performance criteria.
+- **If the client agrees:** create a production build, start it, run the
+  measurement, stop the server again and report the results against N5.
+- **If the client declines:** do not measure. In the final report, state that
+  the performance criteria have not been checked and explain how the client
+  can check them:
+  1. Run `npm run build` and then `npm start`.
+  2. Open the website in Google Chrome.
+  3. Open the developer tools (F12) and select the "Lighthouse" tab.
+  4. Select "Mobile" and the category "Performance", then click "Analyze page load".
+  5. Compare the results with the thresholds in `SPEC.md` (N5).
+  6. Do not measure with `npm run dev`. The development mode is much slower.
+
+
 ## Legal Notice, Privacy Policy and Personal Data
 
 ### Legal Notice (Impressum)

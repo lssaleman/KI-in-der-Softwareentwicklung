@@ -51,3 +51,4 @@ Konfiguration und Tool in ein **Zielprojekt**, und der Agent arbeitet dort.
   Agent weder Regeln noch Tool.
 - Jeder Durchlauf bekommt ein eigenes Verzeichnis. So bleiben Läufe mit
   verschiedenen Modellen oder Prompts vergleichbar.
+- Lighthouse ist 

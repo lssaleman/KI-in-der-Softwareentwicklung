@@ -137,3 +137,117 @@ also offers a simple way to sign up for a trial training session.
   - [ ] Before a picture or video is published, the department member confirms
         that it may be used and that the people shown have given their consent.
   - [ ] Changes are visible on the website after saving.
+
+## 4. Non-Functional Requirements
+
+### N1: Legal compliance
+
+- **Description:** The website has a legal notice (Impressum) and a privacy policy
+  (Datenschutzerklärung) that visitors can always reach. The legal notice contains
+  the information required by German law, and the privacy policy describes how the
+  website processes personal data as required by the GDPR.
+- **Rationale:** A club website in Germany must have both pages to be published
+  legally. Missing or incorrect pages can lead to formal warnings (Abmahnungen)
+  and fines.
+- **Acceptance criteria:**
+  - [ ] A legal notice page and a privacy policy page exist.
+  - [ ] Both pages can be reached with one click from every page of the website.
+  - [ ] The legal notice shows the club's name, address, authorised representatives
+        (board), contact details and register entry.
+  - [ ] Missing club details are shown as clearly marked placeholders, not as
+        invented data.
+  - [ ] The privacy policy only describes data processing that the website
+        actually performs.
+  - [ ] Every feature that processes personal data (e.g. the trial training
+        request) is described in the privacy policy.
+  - [ ] The privacy policy is marked as a draft that must be reviewed by the club.
+  - [ ] No content from third parties (e.g. videos, maps, fonts, trackers) is
+        loaded before the visitor has given consent.
+
+### N3: Accessibility
+
+- **Description:** The website can be used by all visitors, including people with
+  visual, hearing, motor or cognitive impairments, older members and people using
+  assistive technologies such as screen readers. It meets WCAG 2.2, conformance
+  level AA.
+- **Rationale:** A sports club is open to everyone. Many clubs offer inclusive or
+  senior sports, and their members must be able to use the website as well.
+  An inaccessible website excludes potential members.
+- **Acceptance criteria:**
+  - [ ] The website meets the success criteria of WCAG 2.2, level AA.
+  - [ ] All content and functions can be used with the keyboard alone.
+  - [ ] All content remains readable and usable when the text is enlarged to 200 %.
+  - [ ] Information is never conveyed by colour alone.
+  - [ ] Videos with spoken content have captions.
+  - [ ] Nothing plays, moves or blinks automatically for more than five seconds
+        without a way to pause or stop it.
+  - [ ] Texts are written in plain, easy-to-understand language.
+
+### N4: Usability and responsive design
+
+- **Description:** The website is designed mobile first, because many visitors use
+  it on their phones. On larger screens, such as laptops, it makes good use of the
+  available width instead of showing a narrow mobile layout. Visitors find what
+  they are looking for quickly and without explanation.
+- **Rationale:** Members and parents often check training times or events on the
+  go, for example on the way to the sports ground. On a laptop, a stretched
+  mobile layout looks unprofessional and wastes space. If the website is hard to
+  use, visitors leave and prospective members do not sign up.
+- **Acceptance criteria:**
+  - [ ] The website is fully usable on screen widths from 320 px to 1920 px.
+  - [ ] No page requires horizontal scrolling.
+  - [ ] On wide screens, content is arranged side by side where it makes sense
+        (e.g. events and news next to each other) instead of in one long column.
+  - [ ] Lines of running text stay short enough to read comfortably, even on wide
+        screens.
+  - [ ] Buttons and links are large enough to tap with a finger (at least
+        44 × 44 px).
+  - [ ] Links and buttons are clearly recognisable as clickable.
+  - [ ] No information or function is available only on mouse hover.
+  - [ ] Recurring elements (top bar, footer, sponsors) appear in the same place on
+        every page.
+
+### N5: Performance
+
+- **Description:** The website shows simple information such as events, teams and
+  training times. Its pages should therefore load quickly, even on a mobile
+  connection.
+- **Rationale:** Visitors are annoyed by slow pages and often leave before the
+  content appears. Many visitors use the website on their phones with a mobile
+  connection, where slow pages are especially noticeable.
+- **Acceptance criteria:**
+  - [ ] The main content of every page is visible within 2.5 seconds on a mobile
+        connection (Largest Contentful Paint ≤ 2.5 s).
+  - [ ] The page reacts to clicks and input within 200 ms
+        (Interaction to Next Paint ≤ 200 ms).
+  - [ ] Content does not jump around while the page is loading
+        (Cumulative Layout Shift ≤ 0.1).
+  - [ ] Every page reaches a Lighthouse performance score of at least 90 in the
+        mobile test.
+  - [ ] The start page transfers less than 1 MB of data on first load.
+  - [ ] Pictures are delivered in a size that fits the screen they are shown on.
+  - [ ] Videos are only loaded when the visitor starts them.
+
+### N6: UI design
+
+- **Description:** The website uses a bright and warm colour palette and prefers
+  rounded shapes over sharp edges, so it looks welcoming and friendly. If the
+  client asks for other colours (e.g. the club colours) or a different shape
+  language, the client's wishes take precedence over this default.
+- **Rationale:** A sports club wants to attract new members and appear open to
+  everyone. A friendly, inviting appearance makes visitors more likely to stay and
+  get in touch.
+- **Acceptance criteria:**
+  - [ ] Unless the client specifies otherwise, the website uses a bright, warm
+        colour palette.
+  - [ ] Unless the client specifies otherwise, buttons, cards and pictures have
+        rounded corners.
+  - [ ] If the client specifies colours or shapes, these are used instead.
+  - [ ] The same colours and shapes are used consistently on every page.
+  - [ ] All colour combinations still meet the contrast requirements of N3.
+
+## 5. Out of Scope
+
+- Login and user accounts
+- Role and permission management
+- Connection to a real database
