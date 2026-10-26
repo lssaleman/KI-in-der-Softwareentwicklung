@@ -45,9 +45,11 @@ If you cannot find this stack in the project (no `package.json` that lists
 
 | Path              | Purpose                                                              |
 |-------------------|----------------------------------------------------------------------|
-| `app/`            | Routes and layout. Presentation only, no business logic.             |
-| `components/`     | Reusable UI components (one per file, PascalCase).                   |
-| `lib/`            | Logic, types and helper functions (camelCase). Every function has a test. |
+| `app/routes/`     | Routes            |
+| `app/components/` | Reusable UI components (one per file, PascalCase).                   |
+| `app/services`    | Service logic for components                                         |
+| `app/view/`       | Page using components
+| `app/utils`       | Logic, types and helper functions (camelCase). Every function has a test. |
 | `lib/data/`       | Sample data as constants, kept separate from logic.                  |
 | `lib/supabase.ts` | The only place where the Supabase client is created. Always mock it in tests. |
 | `public/`         | Static files, only those whose licence permits use (see "Assets"). |
