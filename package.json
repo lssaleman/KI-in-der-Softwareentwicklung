@@ -1,0 +1,12 @@
+{
+  "name": "ki-in-der-softwareentwicklung",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@opencode-ai/plugin": "1.19.4",
+    "parse5": "8.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5"
+  }
+}

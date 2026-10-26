@@ -49,5 +49,8 @@
     "websearch": "ask",
     "external_directory": "deny",
     "doom_loop": "ask"
+  },
+  "tools": {
+    "accessibility_audit": true
   }
 }
