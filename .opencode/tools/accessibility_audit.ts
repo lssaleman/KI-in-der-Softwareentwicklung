@@ -9,7 +9,6 @@ import { parse as parseTSX } from "@typescript-eslint/parser";
 
 type Severity = "critical" | "serious" | "moderate" | "minor";
 
-
 type Issue = {
   file: string;
   line: number | null;
