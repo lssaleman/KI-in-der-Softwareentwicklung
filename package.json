@@ -2,9 +2,18 @@
   "name": "ki-in-der-softwareentwicklung",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=24.22.1 <25"
+  },
+  "scripts": {
+    "setup": "npm install",
+    "clean": "node -e \"import('node:fs').then(fs => fs.rmSync('node_modules', { recursive: true, force: true }))\"",
+    "check": "npm ls",
+    "reinstall": "npm run clean && npm install"
+  },
   "dependencies": {
     "@opencode-ai/plugin": "1.19.4",
-    "parse5": "8.0.1"
+    "@typescript-eslint/parser": "^8.0.0"
   },
   "devDependencies": {
     "@types/node": "26.6.5"
