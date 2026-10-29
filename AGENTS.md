@@ -142,7 +142,6 @@ Run these commands in this order after every change.
 You are only done when both pass without errors.
 
 1. `npx tsc --noEmit` — type and syntax check
-2. `run_tests` — tests via the custom tool (do not call `npm test` directly)
 
 If one of them still fails after 5 attempts, stop. Do not keep trying.
 Report what fails and what the client can try next.

@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "opencode-go/qwen3.7-plus",
+  "model": "opencode-go/qwen3.8-flash",
   "permission": {
     "read": {
       "*": "allow",
@@ -36,7 +36,7 @@
       "npm install*": "ask",
       "npm i *": "ask",
       "npm uninstall*": "ask",
-      "npm test*": "deny",
+      "npm test*": "allow",
       "npx vitest*": "deny",
       "git commit*": "deny",
       "git push*": "deny",
