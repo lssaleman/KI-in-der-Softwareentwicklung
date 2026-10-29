@@ -20,7 +20,8 @@
       "*.env": "deny",
       "*.env.*": "deny",
       "*package.json": "ask",
-      "*package-lock.json": "ask"
+      "*package-lock.json": "ask",
+      "*vitest.config.ts": "deny"
     },
     "bash": {
       "*": "ask",
