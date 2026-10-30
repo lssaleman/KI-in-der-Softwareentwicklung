@@ -1,54 +1,56 @@
 # KI-in-der-Softwareentwicklung
 Ein Harness zum Entwickeln von Webseiten für Sportvereine
 
-## Installation in ein Projekt
+## Installation
 
-Der Harness wird nicht direkt im Harness-Repo benutzt. `install.sh` kopiert
-Konfiguration und Tool in ein **Zielprojekt**, und der Agent arbeitet dort.
+Harness und Zielprojekt liegen in diesem Repository zusammen. Es gibt kein
+separates Installationsskript.
 
 ### Voraussetzungen
 
-- Node.js (Version: <eintragen>) und npm
+- Git
+- Node.js (getestet mit Version 20.20.2) und npm
 - OpenCode (Version: <Ausgabe von `opencode --version` eintragen>)
-- Zugriff auf das Modell Big Pickle über OpenCode
-- Internetzugang (für `npm install`)
+- Ein Abonnement für OpenCode Go mit API-Key
 
 ### Schritte
 
-1. **Zielprojekt anlegen.** `setup_durchlauf.sh` erzeugt ein frisches
-   Next.js-Projekt (React, Tailwind, Supabase-Client) unter
-   `sportwebseiten/durchlauf_XX`:
+1. **Repository klonen**
 
-```bash
-   ./setup_durchlauf.sh
-```
+   ```bash
+   git clone <Repository-URL>
+   cd KI-in-der-Softwareentwicklung
+   ```
 
-2. **Harness installieren.** Das Skript kopiert `AGENTS.md`, `opencode.json`
-   und `.opencode/` (inklusive `run_tests`) ins Zielprojekt und richtet die
-   Testumgebung ein:
+2. **Abhängigkeiten installieren**
 
-```bash
-   ./vereins-harness/install.sh sportwebseiten/durchlauf_XX
-```
+   ```bash
+   npm install
+   ```
 
-3. **Agent starten.** OpenCode muss im Zielprojekt gestartet werden, weil
-   es `AGENTS.md`, `opencode.json` und `.opencode/` aus dem aktuellen
-   Verzeichnis liest:
+3. **OpenCode starten** (im Projektstamm, damit `AGENTS.md`, `opencode.json`
+   und `.opencode/` gefunden werden)
 
-```bash
-   cd sportwebseiten/durchlauf_XX
+   ```bash
    opencode
-```
+   ```
 
-   Danach das Modell wählen (`/models`) und den Auftrag als Prompt eingeben.
+4. **Beim ersten Start mit OpenCode Go verbinden:** `/connect` eingeben,
+   "OpenCode Go" wählen und den API-Key einfügen. Das Modell
+   (`opencode-go/qwen3.7-plus`) ist in `opencode.json` voreingestellt.
 
-### Hinweise
+Danach kann direkt ein Auftrag als Prompt eingegeben werden.
 
-- Die Reihenfolge ist wichtig: Erst das Zielprojekt anlegen, dann `install.sh`
-  ausführen. `setup_durchlauf.sh` löscht vorhandene `AGENTS.md`-Dateien, die
-  `install.sh` mitgebracht hätte.
-- Wird `opencode` im Harness-Repo statt im Zielprojekt gestartet, findet der
-  Agent weder Regeln noch Tool.
-- Jeder Durchlauf bekommt ein eigenes Verzeichnis. So bleiben Läufe mit
-  verschiedenen Modellen oder Prompts vergleichbar.
-- Lighthouse ist 
+### Was zum Harness gehört
+
+| Datei / Ordner | Zweck |
+|---|---|
+| `AGENTS.md` | Regeln und Arbeitsweise des Agenten |
+| `SPEC.md` | Spezifikation der Vereinswebseite |
+| `opencode.json` | Modell und Berechtigungen (harte Restriktionen) |
+| `.opencode/tools/` | Eigene Tools, z. B. `accessibility_audit` |
+
+### Harness in ein anderes Projekt übernehmen
+
+Für ein bestehendes Next.js-Projekt die Dateien aus der Tabelle oben in den
+Projektstamm kopieren und dort `opencode` starten.
