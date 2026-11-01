@@ -54,3 +54,11 @@ Danach kann direkt ein Auftrag als Prompt eingegeben werden.
 
 Für ein bestehendes Next.js-Projekt die Dateien aus der Tabelle oben in den
 Projektstamm kopieren und dort `opencode` starten.
+
+### Use of AI tools
+- Accessibility tool wurde mit KI geschrieben
+- Formulierungen wurden mit KI überarbeitet
+- Strukturierung in Markdown mit KI Unterstützung geschrieben
+- Das Config-tool für die Tests wurde mit KI geschrieben
+- Lizenzinformationen zu openweight und opensource und Datenschutzinformationen mit KI recherchiert
+- Unbekannte Begriffe von KI erklären lassen
