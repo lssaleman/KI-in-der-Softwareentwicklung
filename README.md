@@ -18,7 +18,7 @@ separates Installationsskript.
 1. **Repository klonen**
 
    ```bash
-   git clone <Repository-URL>
+   git clone https://github.com/lssaleman/KI-in-der-Softwareentwicklung.git
    cd KI-in-der-Softwareentwicklung
    ```
 
