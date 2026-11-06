@@ -44,7 +44,10 @@
       "rm -rf*": "deny",
       "curl *": "deny",
       "wget *": "deny",
-      "*.env*": "deny"
+      "*.env*": "deny",
+      "echo *": "allow",
+      "date": "allow",
+      "tee *": "allow"
     },
     "webfetch": "ask",
     "websearch": "ask",

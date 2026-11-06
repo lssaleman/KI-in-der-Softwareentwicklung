@@ -129,57 +129,130 @@ Code quality (instead of ESLint):
 
 ## Testing
 
-- Tests are written with Vitest and run with `npm test`. The test setup
-  (`vitest.config.ts` and the `test` script in `package.json`) is provided.
-  Do not install another test runner and do not change the test configuration.
-  If `npm test` is missing, stop and ask.
-- Every function in `app/utils/` and `lib/` has a test.
-- Tests live next to the file they test (`name.test.ts`) and import
-  `describe`, `it`, `expect` and `vi` from `vitest`.
-- Mock `lib/supabase.ts` with `vi.mock()` in every test that uses it.
-  Tests never connect to a real database.
-- Test edge cases, not only the normal case. For this domain, at least:
-  - empty lists (no events, no sponsors),
-  - past events,
-  - time zones (the club is located in Germany, time zone `Europe/Berlin`),
-  - German date format (`DD.MM.YYYY`).
+### Writing Tests
+
+You never write, change or delete test files (`*.test.ts`, `*.test.tsx`).
+Tests are written by the subagent `test-writer`.
+
+Call `test-writer` before you implement a feature or change its behaviour:
+
+1. Identify the requirements from `SPEC.md` that your task touches
+   (e.g. F1, F3).
+2. Make sure the interface the tests need exists: the types and function
+   signatures in `lib/types.ts` and the exported function names.
+3. Call `test-writer` with exactly this information:
+   - the requirement IDs,
+   - where the interface is defined.
+
+   Do not add anything else: no descriptions of your implementation, no
+   failing test output, no requests to change existing tests.
+4. Implement the feature until all checks in "Running Commands" pass.
+
+If you believe a test is wrong, do not ask `test-writer` to change it.
+Stop and report which test you think is wrong and why (see "When a Problem
+Cannot Be Solved").
 
 ## Commands
 
+### Running Commands
+
 Run these checks in this order after every change.
-You are only done when all three pass.
+You are only done when all four pass.
 
 1. `npx tsc --noEmit` — type and syntax check
 2. `npm test` — unit tests with Vitest (runs once, no watch mode)
 3. The `accessibility_audit` tool with `target: "app"` — static accessibility
    check. It passes when the report contains no issues.
+4. `npm run build` — production build. Finds errors that the other checks miss,
+   e.g. a component that uses hooks or event handlers without `"use client"`.
 
 Run tests only via `npm test`. Do not call `npx vitest` directly.
 
-If a check still fails after 5 attempts, stop. Do not keep trying.
-Report what fails and what the client can try next.
+An **attempt** is one run of all four checks after a change. Number the attempts
+of a run starting at 1. If a check still fails after 5 attempts, stop. Do not
+keep trying. Report what fails and what the client can try next.
 
 To start the dev server: `npm run dev` (only on request; it keeps running).
 
+### Logging Output of Commands
+
+Every check is logged in its own folder under `agent-logs/verification-logs/`.
+`<run>` is the base name of the development log of this run
+(e.g. `2026-10-21_13-45_startseite-termine-sponsoren`), `<n>` is the attempt number.
+
+At the start of the run, create the folders once:
+
+```bash
+mkdir -p agent-logs/verification-logs/{syntax-logs,test-logs,accessibility-logs,build-logs}
+```
+
+Then run the checks with these commands instead of the plain ones. Each command
+shows the output to you and appends it to the log file:
+
+1. Type check:
+   ```bash
+   { echo "=== attempt <n> | $(date -Iseconds) ==="; npx tsc --noEmit 2>&1; echo "exit code: $?"; } | tee -a agent-logs/verification-logs/syntax-logs/<run>.log
+   ```
+2. Tests:
+   ```bash
+   { echo "=== attempt <n> | $(date -Iseconds) ==="; npm test 2>&1; echo "exit code: $?"; } | tee -a agent-logs/verification-logs/test-logs/<run>.log
+   ```
+3. Accessibility: `accessibility_audit` is a tool, not a shell command. After each
+   call, write its JSON report unchanged to a new file:
+   `agent-logs/verification-logs/accessibility-logs/<run>_attempt-<n>.json`
+4. Build:
+   ```bash
+   { echo "=== attempt <n> | $(date -Iseconds) ==="; npm run build 2>&1; echo "exit code: $?"; } | tee -a agent-logs/verification-logs/build-logs/<run>.log
+   ```
+
+A check passed only if its exit code is `0` (for the accessibility audit: no
+issues in the report). Never edit or delete existing log entries.
+
 ## Logging and Final Report
 
-### Log File
+### Log Files
 
-At the end of every run, write one log file to `agent-logs/`.
+Every run produces two log files with the same base name:
+`YYYY-MM-DD_HH-MM_<short-task-description>.md`
+(lowercase and hyphens, e.g. `2026-10-21_13-45_startseite-termine-sponsoren.md`).
 
-- **File name:** `YYYY-MM-DD_HH-MM_<short-task-description>.md`,
-  e.g. `2026-10-21_13-45_startseite-termine-sponsoren.md`.
-  Use lowercase and hyphens in the description.
-- **Content:** what the task was, which files you created or changed, the
-  results of the commands from "Commands", and any open questions.
-- **Git:** if the project is a git repository, make sure `agent-logs/` is
-  listed in `.gitignore`. Add it if it is missing.
+#### Development Log (`agent-logs/development-logs/`)
+
+Write this file at the end of the run.
+
+- What the task was
+- Which files you created or changed
+- The final result of every check from "Commands"
+- Whether the run finished successfully or was stopped (see "When a Problem
+  Cannot Be Solved")
+- Open questions
+
+#### Verification Summary (`agent-logs/verification-logs/<run>.md`)
+
+Create this file at the start of the run, next to the four log folders.
+After every attempt, append one entry:
+
+- Attempt number
+- Which checks failed (or "all passed")
+- For each failed check: the failing test or error in one line, and the
+  change you made in response (which file, what you changed)
+
+Do not copy raw output; it is already in the log folders under the same
+attempt number. Do not rewrite earlier entries.
+
+The last entry states the outcome: all checks passed, or the run was stopped
+(after which attempt, and why).
+
+#### Git
+
+if the project is a git repository, make sure `agent-logs/` is 
+listed in `.gitignore`. Add it if it is missing.
 
 ### Final Report
 
 After each completed task, give the client a short final report in the chat:
 what you did, whether all commands passed, and what is still open.
-Refer to the log file by its path.
+Refer to the logs file by its path.
 
 ## Accessibility
 
