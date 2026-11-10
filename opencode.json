@@ -33,10 +33,6 @@
       "tail *": "allow",
       "npx tsc --noEmit*": "allow",
       "npm run build*": "allow",
-      "npm run dev*": "ask",
-      "npm install*": "ask",
-      "npm i *": "ask",
-      "npm uninstall*": "ask",
       "npm test*": "allow",
       "npx vitest*": "deny",
       "git commit*": "deny",
@@ -51,8 +47,7 @@
     },
     "webfetch": "ask",
     "websearch": "ask",
-    "external_directory": "deny",
-    "doom_loop": "ask"
+    "external_directory": "deny"
   },
   "tools": {
     "accessibility_audit": true
