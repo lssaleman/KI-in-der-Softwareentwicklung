@@ -52,6 +52,7 @@
     "doom_loop": "ask"
   },
   "tools": {
-    "accessibility_audit": true
+    "accessibility_audit": true,
+    "seo_audit": true
   }
 }
