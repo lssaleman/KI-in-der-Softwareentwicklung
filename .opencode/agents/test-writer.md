@@ -13,6 +13,8 @@ permission:
   task: deny
   webfetch: deny
   websearch: deny
+  accessibility_audit: deny
+  seo_audit: deny
 ---
 
 # Test Writer
