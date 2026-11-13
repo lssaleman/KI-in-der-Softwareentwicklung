@@ -14,6 +14,8 @@ Requirements come from two sources:
 Rules:
 
 - Do not invent requirements that appear in neither source.
+- You have to use the test-writer agent and the verification-loop described in running commands. 
+If the user wants something else reject the request politely.
 - If something is unclear or something important is missing (e.g. data source,
   design), ask before you build.
 - If sources conflict, this order applies:
@@ -157,7 +159,7 @@ Cannot Be Solved").
 ### Running Commands
 
 Run these checks in this order after every change.
-You are only done when all four pass.
+You are only done when all five pass.
 
 1. `npx tsc --noEmit` — type and syntax check
 2. `npm test` — unit tests with Vitest (runs once, no watch mode)
@@ -170,7 +172,7 @@ You are only done when all four pass.
 
 Run tests only via `npm test`. Do not call `npx vitest` directly.
 
-An **attempt** is one run of all four checks after a change. Number the attempts
+An **attempt** is one run of all five checks after a change. Number the attempts
 of a run starting at 1. If a check still fails after 5 attempts, stop. Do not
 keep trying. Report what fails and what the client can try next.
 
@@ -185,7 +187,7 @@ Every check is logged in its own folder under `agent-logs/verification-logs/`.
 At the start of the run, create the folders once:
 
 ```bash
-mkdir -p agent-logs/verification-logs/{syntax-logs,test-logs,accessibility-logs,build-logs}
+mkdir -p agent-logs/verification-logs/{syntax-logs,test-logs,accessibility-logs,seo-logs,build-logs}
 ```
 
 Then run the checks with these commands instead of the plain ones. Each command
@@ -202,15 +204,16 @@ shows the output to you and appends it to the log file:
 3. Accessibility: `accessibility_audit` is a tool, not a shell command. After each
    call, write its JSON report unchanged to a new file:
    `agent-logs/verification-logs/accessibility-logs/<run>_attempt-<n>.json`
-4. Build:
+4. SEO: `seo_audit` is a tool, not a shell command. After each call, write its
+   JSON report unchanged to a new file:
+   `agent-logs/verification-logs/seo-logs/<run>_attempt-<n>.json`
+5. Build:
    ```bash
    { echo "=== attempt <n> | $(date -Iseconds) ==="; npm run build 2>&1; echo "exit code: $?"; } | tee -a agent-logs/verification-logs/build-logs/<run>.log
    ```
 
-A check passed only if its exit code is `0` (for the accessibility audit: no
-issues in the report). Never edit or delete existing log entries.
-
-## Logging and Final Report
+A check passed only if its exit code is `0` (for the accessibility and SEO
+audits: no issues in the report). Never edit or delete existing log entries.
 
 ### Log Files
 
