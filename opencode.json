@@ -2,14 +2,9 @@
   "$schema": "https://opencode.ai/config.json",
   "model": "opencode-go/qwen3.7-plus",
   "permission": {
-    "read": {
-      "*": "allow",
-      "*.env": "deny",
-      "*.env.*": "deny",
-      "*.env.example": "allow"
-    },
     "edit": {
-      "*": "allow",
+      "*.test.ts": "deny",
+      "*.test.tsx": "deny",
       "*AGENTS.md": "deny",
       "*SPEC.md": "deny",
       "*opencode.json": "deny",
@@ -33,10 +28,6 @@
       "tail *": "allow",
       "npx tsc --noEmit*": "allow",
       "npm run build*": "allow",
-      "npm run dev*": "ask",
-      "npm install*": "ask",
-      "npm i *": "ask",
-      "npm uninstall*": "ask",
       "npm test*": "allow",
       "npx vitest*": "deny",
       "git commit*": "deny",
@@ -44,14 +35,17 @@
       "rm -rf*": "deny",
       "curl *": "deny",
       "wget *": "deny",
-      "*.env*": "deny"
+      "*.env*": "deny",
+      "echo *": "allow",
+      "date": "allow",
+      "tee *": "allow"
     },
     "webfetch": "ask",
     "websearch": "ask",
-    "external_directory": "deny",
-    "doom_loop": "ask"
+    "external_directory": "deny"
   },
   "tools": {
-    "accessibility_audit": true
+    "accessibility_audit": true,
+    "seo_audit": true
   }
 }
