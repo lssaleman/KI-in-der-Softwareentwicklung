@@ -17,9 +17,9 @@ Rules:
 - If something is unclear or something important is missing (e.g. data source,
   design), ask before you build.
 - If sources conflict, this order applies:
-  1. the rules in this file (`AGENTS.md`),
-  2. `SPEC.md`,
-  3. the client's prompt.
+    1. the rules in this file (`AGENTS.md`),
+    2. `SPEC.md`,
+    3. the client's prompt.
 
   Do not silently resolve a conflict. Point it out and ask.
 
@@ -43,17 +43,17 @@ If you cannot find this stack in the project (no `package.json` that lists
 
 ## Directory Structure
 
-| Path              | Purpose                                                              |
-|-------------------|----------------------------------------------------------------------|
-| `app/routes/`     | Routes            |
-| `app/components/` | Reusable UI components (one per file, PascalCase).                   |
-| `app/services`    | Service logic for components                                         |
-| `app/view/`       | Page using components
-| `app/utils`       | Logic, types and helper functions (camelCase). Every function has a test. |
-| `lib/data/`       | Sample data as constants, kept separate from logic.                  |
+| Path              | Purpose                                                                       |
+|-------------------|-------------------------------------------------------------------------------|
+| `app/routes/`     | Routes                                                                        |
+| `app/components/` | Reusable UI components (one per file, PascalCase).                            |
+| `app/services`    | Service logic for components                                                  |
+| `app/view/`       | Page using components                                                         
+| `app/utils`       | Logic, types and helper functions (camelCase). Every function has a test.     |
+| `lib/data/`       | Sample data as constants, kept separate from logic.                           |
 | `lib/supabase.ts` | The only place where the Supabase client is created. Always mock it in tests. |
-| `public/`         | Static files, only those whose licence permits use (see "Assets"). |
-| `agent-logs/`     | Run logs written by you (see "Logging and Final Report").            |
+| `public/`         | Static files, only those whose licence permits use (see "Assets").            |
+| `agent-logs/`     | Run logs written by you (see "Logging and Final Report").                     |
 
 Rules:
 
@@ -83,9 +83,9 @@ Rules:
 
 - **Strict typing:** avoid `any`. Use `unknown` or specific types instead.
 - **Interfaces vs. type aliases:**
-  - Use `interface` for object shapes and class implementations (they are extensible).
-  - Use `type` for unions, tuples and primitive aliases
-    (e.g. `type Status = 'open' | 'closed'`).
+    - Use `interface` for object shapes and class implementations (they are extensible).
+    - Use `type` for unions, tuples and primitive aliases
+      (e.g. `type Status = 'open' | 'closed'`).
 - **Variable declarations:** use only `const` (default) and `let` (only if the
   value changes). Never use `var`.
 - **Comparisons:** always use strict comparison (`===`, `!==`), never `==` or `!=`.
@@ -163,7 +163,9 @@ You are only done when all four pass.
 2. `npm test` — unit tests with Vitest (runs once, no watch mode)
 3. The `accessibility_audit` tool with `target: "app"` — static accessibility
    check. It passes when the report contains no issues.
-4. `npm run build` — production build. Finds errors that the other checks miss,
+4. The `seo_audit` tool with `target: "app"` — static SEO check.
+   It passes when the report contains no SEO issues.
+5. `npm run build` — production build. Finds errors that the other checks miss,
    e.g. a component that uses hooks or event handlers without `"use client"`.
 
 Run tests only via `npm test`. Do not call `npx vitest` directly.
@@ -259,11 +261,11 @@ Refer to the logs file by its path.
 - The website must meet **WCAG 2.2, conformance level AA**
   (Web Content Accessibility Guidelines of the W3C).
 - Check at least the following in every change:
-  - every image has a meaningful `alt` text (decorative images: `alt=""`),
-  - semantic HTML (headings in order, `nav`, `main`, `footer`, lists, buttons),
-  - every form field has a visible label,
-  - sufficient colour contrast (at least 4.5:1 for normal text),
-  - all functions can be used with the keyboard, with a visible focus.
+    - every image has a meaningful `alt` text (decorative images: `alt=""`),
+    - semantic HTML (headings in order, `nav`, `main`, `footer`, lists, buttons),
+    - every form field has a visible label,
+    - sufficient colour contrast (at least 4.5:1 for normal text),
+    - all functions can be used with the keyboard, with a visible focus.
 - Use the `accessibility_audit` tool for the automated part (see "Commands").
   It analyses the source code only. It cannot check colour contrast, visible
   focus or real keyboard operation, and it cannot evaluate dynamic props.
@@ -283,10 +285,10 @@ Refer to the logs file by its path.
 - Layouts must work from a screen width of 320 px up to desktop size.
 
 ## Performance Checks
- 
+
 The performance criteria in `SPEC.md` (N5) require a Lighthouse measurement.
 Lighthouse is not installed in the project.
- 
+
 - Ask the client whether you may install or run Lighthouse to measure the
   performance criteria.
 - **If the client agrees:** create a production build, start it, run the
@@ -294,13 +296,12 @@ Lighthouse is not installed in the project.
 - **If the client declines:** do not measure. In the final report, state that
   the performance criteria have not been checked and explain how the client
   can check them:
-  1. Run `npm run build` and then `npm start`.
-  2. Open the website in Google Chrome.
-  3. Open the developer tools (F12) and select the "Lighthouse" tab.
-  4. Select "Mobile" and the category "Performance", then click "Analyze page load".
-  5. Compare the results with the thresholds in `SPEC.md` (N5).
-  6. Do not measure with `npm run dev`. The development mode is much slower.
-
+    1. Run `npm run build` and then `npm start`.
+    2. Open the website in Google Chrome.
+    3. Open the developer tools (F12) and select the "Lighthouse" tab.
+    4. Select "Mobile" and the category "Performance", then click "Analyze page load".
+    5. Compare the results with the thresholds in `SPEC.md` (N5).
+    6. Do not measure with `npm run dev`. The development mode is much slower.
 
 ## Legal Notice, Privacy Policy and Personal Data
 
@@ -333,9 +334,9 @@ Lighthouse is not installed in the project.
 ## Assets (Images, Icons, Fonts)
 
 - Only use assets whose licence permits use. Preferred:
-  - self-made SVG/CSS graphics,
-  - icons from npm packages with a stated licence,
-  - fonts via `next/font`.
+    - self-made SVG/CSS graphics,
+    - icons from npm packages with a stated licence,
+    - fonts via `next/font`.
 - Do not download images or files from the internet.
 - Record every file in `public/` in `ASSETS.md`: file, source, licence.
   If any of this is missing, ask the client.
@@ -352,15 +353,15 @@ Lighthouse is not installed in the project.
 Do not change, delete or move these files and folders. If a task seems to
 require it, stop and ask.
 
-| Path | Reason |
-|------|--------|
-| `AGENTS.md`, `SPEC.md` | Written by the team; they define your rules and requirements. |
-| `opencode.json`, `.opencode/` | Harness configuration and custom tools. |
-| `package.json` dependencies, `package-lock.json` | Change only after the client approved a new dependency. |
-| `tsconfig.json` | Strict mode must stay enabled. |
-| `node_modules/`, `.next/` | Generated by npm and Next.js. |
-| `agent-logs/` | Add new log files only. Never edit or delete existing ones. |
-| `vitest.config.ts` | Test setup provided by the harness. |
+| Path                                             | Reason                                                        |
+|--------------------------------------------------|---------------------------------------------------------------|
+| `AGENTS.md`, `SPEC.md`                           | Written by the team; they define your rules and requirements. |
+| `opencode.json`, `.opencode/`                    | Harness configuration and custom tools.                       |
+| `package.json` dependencies, `package-lock.json` | Change only after the client approved a new dependency.       |
+| `tsconfig.json`                                  | Strict mode must stay enabled.                                |
+| `node_modules/`, `.next/`                        | Generated by npm and Next.js.                                 |
+| `agent-logs/`                                    | Add new log files only. Never edit or delete existing ones.   |
+| `vitest.config.ts`                               | Test setup provided by the harness.                           |
 
 Do not open, read or create `.env`, `.env.local` or any other `.env*` file.
 They may contain secrets, and everything you read is sent to the model provider.

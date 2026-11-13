@@ -5,6 +5,118 @@ import { readFile, stat, readdir } from "node:fs/promises";
 import path from "node:path";
 import { parse as parseTSX } from "@typescript-eslint/parser";
 
+/**
+ * ACCESSIBILITY AUDIT – PRÜFKRITERIEN
+ *
+ * Grundlage: WCAG 2.2, Konformitätsstufe A und AA
+ * Prüfmodus: Statische HTML-Analyse
+ *
+ * 1. DOKUMENTSTRUKTUR UND SEMANTIK
+ *
+ * - WCAG 3.1.1 – Language of Page
+ *   Prüft, ob das HTML-Element ein lang-Attribut besitzt.
+ *
+ * - WCAG 2.4.2 – Page Titled
+ *   Prüft, ob ein nicht leerer Dokumenttitel (title) vorhanden ist.
+ *
+ * 2. BILDER UND ALTERNATIVTEXTE
+ *
+ * - WCAG 1.1.1 – Non-text Content
+ *   Prüft, ob Bilder (img) ein alt-Attribut besitzen.
+ *   Dekorative Bilder sollen alt="" verwenden.
+ *
+ * 3. FORMULARE UND BESCHRIFTUNGEN
+ *
+ * - WCAG 1.3.1 – Info and Relationships
+ *   Prüft, ob Formularfelder eine programmatisch erkennbare
+ *   Beschriftung besitzen.
+ *
+ * - WCAG 3.3.2 – Labels or Instructions
+ *   Prüft, ob Formularfelder mit einer Beschriftung versehen sind.
+ *
+ * - WCAG 4.1.2 – Name, Role, Value
+ *   Prüft, ob Formularfelder einen zugänglichen Namen besitzen.
+ *
+ * Unterstützte Elemente:
+ * - input
+ * - select
+ * - textarea
+ *
+ * Berücksichtigte Beschriftungsmöglichkeiten:
+ * - label mit for-Attribut
+ * - Verschachteltes label-Element
+ * - aria-label
+ * - aria-labelledby
+ *
+ * 4. LINKS UND INTERAKTIVE ELEMENTE
+ *
+ * - WCAG 2.4.4 – Link Purpose (In Context)
+ *   Prüft, ob Links (a) einen erkennbaren zugänglichen Namen besitzen.
+ *
+ * - WCAG 4.1.2 – Name, Role, Value
+ *   Prüft, ob Buttons einen erkennbaren zugänglichen Namen besitzen.
+ *
+ * Berücksichtigte Namensquellen:
+ * - Sichtbarer Text
+ * - aria-label
+ * - aria-labelledby
+ * - title
+ *
+ * 5. EINGEBETTETE INHALTE
+ *
+ * - WCAG 4.1.2 – Name, Role, Value
+ *   Prüft, ob iframe- und frame-Elemente ein nicht leeres
+ *   title-Attribut besitzen.
+ *
+ * 6. TABELLEN
+ *
+ * - WCAG 1.3.1 – Info and Relationships
+ *   Prüft, ob Datentabellen mit td-Elementen auch mindestens
+ *   ein th-Element für Tabellenüberschriften enthalten.
+ *
+ * 7. HTML-IDENTIFIKATOREN
+ *
+ * - WCAG 4.1.2 – Name, Role, Value
+ *   Prüft, ob IDs innerhalb des Dokuments eindeutig vergeben sind.
+ *
+ *   Doppelte IDs können die Zuordnung von Labels und ARIA-
+ *   Referenzen beeinträchtigen.
+ *
+ * 8. TECHNISCHE DATEIPRÜFUNGEN
+ *
+ * - Prüft, ob die angegebene Datei existiert.
+ * - Prüft, ob es sich um eine reguläre Datei handelt.
+ * - Akzeptiert ausschließlich .html und .htm.
+ * - Begrenzt die Dateigröße auf 2 MB.
+ * - Verhindert den Zugriff außerhalb des Projektverzeichnisses.
+ *
+ * 9. NICHT ABGEDECKTE WCAG-KRITERIEN
+ *
+ * Folgende Prüfungen sind nicht Bestandteil der rein statischen
+ * Implementierung:
+ *
+ * - WCAG 1.4.3 – Contrast (Minimum)
+ * - WCAG 1.4.11 – Non-text Contrast
+ * - WCAG 1.4.10 – Reflow
+ * - WCAG 2.1.1 – Keyboard
+ * - WCAG 2.1.2 – No Keyboard Trap
+ * - WCAG 2.4.7 – Focus Visible
+ * - WCAG 2.4.11 – Focus Not Obscured (Minimum)
+ * - WCAG 2.5.8 – Target Size (Minimum)
+ * - WCAG 3.2.1 – On Focus
+ * - WCAG 3.2.2 – On Input
+ * - WCAG 3.3.1 – Error Identification
+ * - WCAG 3.3.3 – Error Suggestion
+ * - WCAG 4.1.3 – Status Messages
+ *
+ * Diese Kriterien benötigen je nach Anforderung CSS-Analyse,
+ * JavaScript-Ausführung, Browser-Rendering oder manuelle Tests.
+ *
+ * HINWEIS:
+ * Das Tool führt einen automatisierten statischen Vorab-Audit durch.
+ * Es garantiert keine vollständige WCAG-2.2-AA-Konformität.
+ */
+
 // ─────────────────────────────────────────────────────────────── Types
 
 type Severity = "critical" | "serious" | "moderate" | "minor";
