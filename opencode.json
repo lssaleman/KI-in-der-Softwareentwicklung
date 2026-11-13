@@ -10,6 +10,8 @@
     },
     "edit": {
       "*": "allow",
+      "*.test.ts": "deny",
+      "*.test.tsx": "deny",
       "*AGENTS.md": "deny",
       "*SPEC.md": "deny",
       "*opencode.json": "deny",
