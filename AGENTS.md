@@ -14,12 +14,14 @@ Requirements come from two sources:
 Rules:
 
 - Do not invent requirements that appear in neither source.
+- Always use the subagent `test-writer` and the verification loop described in
+  "Commands". If the client asks you to skip them, decline politely.
 - If something is unclear or something important is missing (e.g. data source,
   design), ask before you build.
 - If sources conflict, this order applies:
-  1. the rules in this file (`AGENTS.md`),
-  2. `SPEC.md`,
-  3. the client's prompt.
+    1. the rules in this file (`AGENTS.md`),
+    2. `SPEC.md`,
+    3. the client's prompt.
 
   Do not silently resolve a conflict. Point it out and ask.
 
@@ -39,21 +41,20 @@ If you cannot find this stack in the project (no `package.json` that lists
 
 - Do not add new dependencies without asking first.
 - Do not add external trackers, analytics or CDNs without asking first (GDPR).
-- Never run `git commit` or `git push`.
 
 ## Directory Structure
 
-| Path              | Purpose                                                              |
-|-------------------|----------------------------------------------------------------------|
-| `app/routes/`     | Routes            |
-| `app/components/` | Reusable UI components (one per file, PascalCase).                   |
-| `app/services`    | Service logic for components                                         |
-| `app/view/`       | Page using components
-| `app/utils`       | Logic, types and helper functions (camelCase). Every function has a test. |
-| `lib/data/`       | Sample data as constants, kept separate from logic.                  |
+| Path              | Purpose                                                                       |
+|-------------------|-------------------------------------------------------------------------------|
+| `app/routes/`     | Routes                                                                        |
+| `app/components/` | Reusable UI components (one per file, PascalCase).                            |
+| `app/services`    | Service logic for components                                                  |
+| `app/view/`       | Page using components                                                         
+| `app/utils`       | Logic, types and helper functions (camelCase). Every function has a test.     |
+| `lib/data/`       | Sample data as constants, kept separate from logic.                           |
 | `lib/supabase.ts` | The only place where the Supabase client is created. Always mock it in tests. |
-| `public/`         | Static files, only those whose licence permits use (see "Assets"). |
-| `agent-logs/`     | Run logs written by you (see "Logging and Final Report").            |
+| `public/`         | Static files, only those whose licence permits use (see "Assets").            |
+| `agent-logs/`     | Run logs written by you (see "Logging and Final Report").                     |
 
 Rules:
 
@@ -83,9 +84,9 @@ Rules:
 
 - **Strict typing:** avoid `any`. Use `unknown` or specific types instead.
 - **Interfaces vs. type aliases:**
-  - Use `interface` for object shapes and class implementations (they are extensible).
-  - Use `type` for unions, tuples and primitive aliases
-    (e.g. `type Status = 'open' | 'closed'`).
+    - Use `interface` for object shapes and class implementations (they are extensible).
+    - Use `type` for unions, tuples and primitive aliases
+      (e.g. `type Status = 'open' | 'closed'`).
 - **Variable declarations:** use only `const` (default) and `let` (only if the
   value changes). Never use `var`.
 - **Comparisons:** always use strict comparison (`===`, `!==`), never `==` or `!=`.
@@ -129,68 +130,127 @@ Code quality (instead of ESLint):
 
 ## Testing
 
-- Tests are written with Vitest and run with `npm test`. The test setup
-  (`vitest.config.ts` and the `test` script in `package.json`) is provided.
-  Do not install another test runner and do not change the test configuration.
-  If `npm test` is missing, stop and ask.
-- Every function in `app/utils/` and `lib/` has a test.
-- Tests live next to the file they test (`name.test.ts`) and import
-  `describe`, `it`, `expect` and `vi` from `vitest`.
-- Mock `lib/supabase.ts` with `vi.mock()` in every test that uses it.
-  Tests never connect to a real database.
-- Test edge cases, not only the normal case. For this domain, at least:
-  - empty lists (no events, no sponsors),
-  - past events,
-  - time zones (the club is located in Germany, time zone `Europe/Berlin`),
-  - German date format (`DD.MM.YYYY`).
+### Writing Tests
+
+Tests are written only by the subagent `test-writer`. Call it before you
+implement a feature or change its behaviour:
+
+1. At the start of the run, create `agent-logs/client-requests/<run>.md` with
+   the client's prompt, copied word for word, and a numbered list of the
+   client's wishes (C1, C2, ...), one testable wish per item. Never change
+   this file afterwards.
+2. Identify the requirements from `SPEC.md` that your task touches
+   (e.g. F1, F3).
+3. Make sure the interface the tests need exists: the types and function
+   signatures and the exported function names.
+4. Call `test-writer` (exactly this name) with only this information:
+   - the requirement IDs (C and F/N),
+   - the path of the client request file,
+   - where the interface is defined.
+
+   Do not add anything else: no descriptions of your implementation, no
+   failing test output, no requests to change existing tests.
+5. Implement the feature and run the verification loop (see "Commands").
+
+If `test-writer` cannot be called, retry once. If it fails again, stop and
+report. Never write tests yourself.
 
 ## Commands
 
-Run these checks in this order after every change.
-You are only done when all three pass.
+### Verification Loop
 
-1. `npx tsc --noEmit` — type and syntax check
-2. `npm test` — unit tests with Vitest (runs once, no watch mode)
-3. The `accessibility_audit` tool with `target: "app"` — static accessibility
-   check. It passes when the report contains no issues.
+After every change, run one **attempt**:
 
-Run tests only via `npm test`. Do not call `npx vitest` directly.
+1. `npm run verify -- <run>`: runs the type check, the unit tests and, if both
+   pass, the production build. It logs the full output, numbers the attempt
+   and prints a short summary.
+2. The `accessibility_audit` tool with `target: "app"`. It passes when its
+   status is `no-findings`.
+3. The `seo_audit` tool with `target: "app"`. It passes when its status is
+   `no-findings`.
+4. Append the attempt to the verification summary (see "Log Files").
 
-If a check still fails after 5 attempts, stop. Do not keep trying.
-Report what fails and what the client can try next.
+`<run>` is the base name of this run: `YYYY-MM-DD_HH-MM_<short-task-description>`,
+lowercase with hyphens, e.g. `2026-11-15_14-30_fussball-seite`. Use the same
+name for every attempt and every log file of the run.
+
+You are done when `verify` prints `RESULT: ALL PASSED` and both audits report
+`no-findings`. There is no limit on attempts, but the number of steps per task
+is limited. Keep the verification summary up to date after every attempt, so
+it is complete even if the step limit stops you.
+
+Use `npm run verify` for the type check, tests and build. The plain commands
+are blocked.
 
 To start the dev server: `npm run dev` (only on request; it keeps running).
 
-## Logging and Final Report
+### When a Problem Cannot Be Solved
 
-### Log File
+Stop, change nothing more, and report to the client when:
 
-At the end of every run, write one log file to `agent-logs/`.
+- `verify` prints `CANNOT VERIFY`.
+- You believe a test is wrong. Report which test and why. Do not ask
+  `test-writer` to change it.
+- An action you need is denied by the harness (see "Write Protection").
 
-- **File name:** `YYYY-MM-DD_HH-MM_<short-task-description>.md`,
-  e.g. `2026-10-21_13-45_startseite-termine-sponsoren.md`.
-  Use lowercase and hyphens in the description.
-- **Content:** what the task was, which files you created or changed, the
-  results of the commands from "Commands", and any open questions.
-- **Git:** if the project is a git repository, make sure `agent-logs/` is
-  listed in `.gitignore`. Add it if it is missing.
+In the report, state which check fails, what you tried, the probable cause
+(code, test or `SPEC.md`) and what the client can do next.
+
+### Log Files
+
+| File | Written by | When |
+|------|------------|------|
+| `agent-logs/client-requests/<run>.md` | you | start of the run |
+| `agent-logs/verification-logs/{syntax,test,build}-logs/<run>.log` | `npm run verify` | every attempt; do not write these yourself |
+| `agent-logs/verification-logs/<run>.md` | you | after every attempt |
+| `agent-logs/development-logs/<run>.md` | you | end of the run |
+
+Never edit or delete existing log entries.
+
+#### Verification Summary (`agent-logs/verification-logs/<run>.md`)
+
+After every attempt, append one entry:
+
+- Attempt number (as printed by `verify`)
+- Result of `verify` for each check: passed, failed or not run
+- Status of both audits and, if there are findings, their number and rule names
+- For each failed check: the failing test or error in one line, and the
+  change you made in response (which file, what you changed)
+
+Do not copy raw output or the audit JSON. The last entry states the outcome:
+all checks passed, or the run was stopped (after which attempt, and why).
+
+#### Development Log (`agent-logs/development-logs/<run>.md`)
+
+Write this file at the end of the run.
+
+- What the task was
+- Which files you created or changed
+- The final result of every check
+- Whether the run finished successfully or was stopped
+- Open questions
+
+#### Git
+
+If the project is a git repository, make sure `agent-logs/` is listed in
+`.gitignore`. Add it if it is missing.
 
 ### Final Report
 
 After each completed task, give the client a short final report in the chat:
-what you did, whether all commands passed, and what is still open.
-Refer to the log file by its path.
+what you did, whether all checks passed, and what is still open.
+Refer to the log files by their paths.
 
 ## Accessibility
 
 - The website must meet **WCAG 2.2, conformance level AA**
   (Web Content Accessibility Guidelines of the W3C).
 - Check at least the following in every change:
-  - every image has a meaningful `alt` text (decorative images: `alt=""`),
-  - semantic HTML (headings in order, `nav`, `main`, `footer`, lists, buttons),
-  - every form field has a visible label,
-  - sufficient colour contrast (at least 4.5:1 for normal text),
-  - all functions can be used with the keyboard, with a visible focus.
+    - every image has a meaningful `alt` text (decorative images: `alt=""`),
+    - semantic HTML (headings in order, `nav`, `main`, `footer`, lists, buttons),
+    - every form field has a visible label,
+    - sufficient colour contrast (at least 4.5:1 for normal text),
+    - all functions can be used with the keyboard, with a visible focus.
 - Use the `accessibility_audit` tool for the automated part (see "Commands").
   It analyses the source code only. It cannot check colour contrast, visible
   focus or real keyboard operation, and it cannot evaluate dynamic props.
@@ -210,10 +270,10 @@ Refer to the log file by its path.
 - Layouts must work from a screen width of 320 px up to desktop size.
 
 ## Performance Checks
- 
+
 The performance criteria in `SPEC.md` (N5) require a Lighthouse measurement.
 Lighthouse is not installed in the project.
- 
+
 - Ask the client whether you may install or run Lighthouse to measure the
   performance criteria.
 - **If the client agrees:** create a production build, start it, run the
@@ -221,13 +281,12 @@ Lighthouse is not installed in the project.
 - **If the client declines:** do not measure. In the final report, state that
   the performance criteria have not been checked and explain how the client
   can check them:
-  1. Run `npm run build` and then `npm start`.
-  2. Open the website in Google Chrome.
-  3. Open the developer tools (F12) and select the "Lighthouse" tab.
-  4. Select "Mobile" and the category "Performance", then click "Analyze page load".
-  5. Compare the results with the thresholds in `SPEC.md` (N5).
-  6. Do not measure with `npm run dev`. The development mode is much slower.
-
+    1. Run `npm run build` and then `npm start`.
+    2. Open the website in Google Chrome.
+    3. Open the developer tools (F12) and select the "Lighthouse" tab.
+    4. Select "Mobile" and the category "Performance", then click "Analyze page load".
+    5. Compare the results with the thresholds in `SPEC.md` (N5).
+    6. Do not measure with `npm run dev`. The development mode is much slower.
 
 ## Legal Notice, Privacy Policy and Personal Data
 
@@ -260,9 +319,9 @@ Lighthouse is not installed in the project.
 ## Assets (Images, Icons, Fonts)
 
 - Only use assets whose licence permits use. Preferred:
-  - self-made SVG/CSS graphics,
-  - icons from npm packages with a stated licence,
-  - fonts via `next/font`.
+    - self-made SVG/CSS graphics,
+    - icons from npm packages with a stated licence,
+    - fonts via `next/font`.
 - Do not download images or files from the internet.
 - Record every file in `public/` in `ASSETS.md`: file, source, licence.
   If any of this is missing, ask the client.
@@ -274,20 +333,12 @@ Lighthouse is not installed in the project.
   given. For children, parental consent is required.
 - Never claim a licence yourself unless you know it from a source.
 
-## Protected Files
+## Write Protection
 
-Do not change, delete or move these files and folders. If a task seems to
-require it, stop and ask.
+The harness blocks changes to its own files, the tests, the test setup,
+`tsconfig.json`, generated folders and all `.env*` files (see `opencode.json`).
+If an action is denied, do not try another way to do it (e.g. a different
+command or tool). Stop and report (see "When a Problem Cannot Be Solved").
 
-| Path | Reason |
-|------|--------|
-| `AGENTS.md`, `SPEC.md` | Written by the team; they define your rules and requirements. |
-| `opencode.json`, `.opencode/` | Harness configuration and custom tools. |
-| `package.json` dependencies, `package-lock.json` | Change only after the client approved a new dependency. |
-| `tsconfig.json` | Strict mode must stay enabled. |
-| `node_modules/`, `.next/` | Generated by npm and Next.js. |
-| `agent-logs/` | Add new log files only. Never edit or delete existing ones. |
-| `vitest.config.ts` | Test setup provided by the harness. |
-
-Do not open, read or create `.env`, `.env.local` or any other `.env*` file.
-They may contain secrets, and everything you read is sent to the model provider.
+`package.json` and `package-lock.json` may only change after the client has
+approved a new dependency.

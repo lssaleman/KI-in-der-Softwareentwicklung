@@ -9,7 +9,8 @@
     "setup": "npm install",
     "clean": "node -e \"import('node:fs').then(fs => fs.rmSync('node_modules', { recursive: true, force: true }))\"",
     "check": "npm ls",
-    "reinstall": "npm run clean && npm install"
+    "reinstall": "npm run clean && npm install",
+    "verify": "node .opencode/scripts/verify.mjs"
   },
   "dependencies": {
     "@opencode-ai/plugin": "1.19.4",

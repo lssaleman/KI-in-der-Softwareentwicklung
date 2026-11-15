@@ -49,6 +49,8 @@ Danach kann direkt ein Auftrag als Prompt eingegeben werden.
 | `SPEC.md` | Spezifikation der Vereinswebseite |
 | `opencode.json` | Modell und Berechtigungen (harte Restriktionen) |
 | `.opencode/tools/` | Eigene Tools, z. B. `accessibility_audit` |
+| `.opencode/agents/` | Subagent `test-writer`, schreibt die Tests |
+| `.opencode/scripts/verify.mjs` | Prüfskript (`npm run verify`): Typprüfung, Tests, Build, Logging, Versuchslimit |
 
 ### Harness in ein anderes Projekt übernehmen
 
@@ -57,8 +59,10 @@ Projektstamm kopieren und dort `opencode` starten.
 
 ### Use of AI tools
 - Accessibility tool wurde mit KI geschrieben
+- SEO tool wurde mit KI geschrieben
 - Formulierungen wurden mit KI überarbeitet
 - Strukturierung in Markdown mit KI Unterstützung geschrieben
 - Das Config-tool für die Tests wurde mit KI geschrieben
 - Lizenzinformationen zu openweight und opensource und Datenschutzinformationen mit KI recherchiert
 - Unbekannte Begriffe von KI erklären lassen
+- Dokumentation des Sandbox und Permission Konzepts von KI vorformulieren lassen und an unsere Entscheidungsgründe angepasst
