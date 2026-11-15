@@ -1,6 +1,7 @@
 ---
 description: Writes Vitest tests from the client's request and the acceptance criteria in SPEC.md. Never changes application code and never removes, skips or weakens existing tests.
 mode: subagent
+steps: 50
 permission:
   edit:
     "*": deny
@@ -68,13 +69,22 @@ the interface named in the task.
 
 ## Conventions
 
-- Tests are written with Vitest and run with `npm test`. The test setup
-  (`vitest.config.ts` and the `test` script in `package.json`) is provided.
-  Do not install another test runner and do not change the test configuration.
+- Tests run with Vitest via `npm test`. The test setup (`vitest.config.ts`,
+  `vitest.setup.ts` and the `test` script in `package.json`) is provided.
+  Do not install another test runner and do not change the test setup.
   If `npm test` is missing, stop and report it.
+- Jest-style tests are allowed: `describe`, `it` and `expect` are available
+  without import, and `jest.fn()` and `jest.spyOn()` work as aliases for
+  `vi.fn()` and `vi.spyOn()`. Importing from `vitest` is also fine.
+- For module mocks, always use `vi.mock()`, never `jest.mock()`.
+  `jest.mock()` does not work in this setup.
+- Do not use `@jest/globals` and do not create a `jest.config.*` file.
+- For components, use `@testing-library/react`. Matchers from
+  `@testing-library/jest-dom` (e.g. `toBeInTheDocument()`) are available.
+- If a test cannot run with the existing setup, do not work around it.
+  Report what is missing.
 - Every function in `app/utils/` and `lib/` is covered by tests.
-- Tests live next to the file they test (`name.test.ts`) and import
-  `describe`, `it`, `expect` and `vi` from `vitest`.
+- Tests live next to the file they test (`name.test.ts` or `name.test.tsx`).
 - Start every test name with the requirement ID, e.g.
   `it("F1: shows the earliest event first", ...)` or
   `it("C2: shows the club colours green and white", ...)`.

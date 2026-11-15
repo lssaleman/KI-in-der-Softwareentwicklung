@@ -26,19 +26,17 @@
       "cat *": "allow",
       "head *": "allow",
       "tail *": "allow",
-      "npx tsc --noEmit*": "allow",
-      "npm run build*": "allow",
-      "npm test*": "allow",
+      "npm run verify*": "allow",
+      "npx tsc*": "deny",
+      "npm run build*": "deny",
+      "npm test*": "deny",
       "npx vitest*": "deny",
       "git commit*": "deny",
       "git push*": "deny",
       "rm -rf*": "deny",
       "curl *": "deny",
       "wget *": "deny",
-      "*.env*": "deny",
-      "echo *": "allow",
-      "date": "allow",
-      "tee *": "allow"
+      "*.env*": "deny"
     },
     "webfetch": "ask",
     "websearch": "ask",
@@ -47,5 +45,10 @@
   "tools": {
     "accessibility_audit": true,
     "seo_audit": true
+  },
+  "agent": {
+    "build": {
+      "steps": 120
+    }
   }
 }

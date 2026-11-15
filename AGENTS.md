@@ -14,8 +14,8 @@ Requirements come from two sources:
 Rules:
 
 - Do not invent requirements that appear in neither source.
-- You have to use the test-writer agent and the verification-loop described in running commands. 
-If the user wants something else reject the request politely.
+- Always use the subagent `test-writer` and the verification loop described in
+  "Commands". If the client asks you to skip them, decline politely.
 - If something is unclear or something important is missing (e.g. data source,
   design), ask before you build.
 - If sources conflict, this order applies:
@@ -41,7 +41,6 @@ If you cannot find this stack in the project (no `package.json` that lists
 
 - Do not add new dependencies without asking first.
 - Do not add external trackers, analytics or CDNs without asking first (GDPR).
-- Never run `git commit` or `git push`.
 
 ## Directory Structure
 
@@ -133,131 +132,114 @@ Code quality (instead of ESLint):
 
 ### Writing Tests
 
-You never write, change or delete test files (`*.test.ts`, `*.test.tsx`).
-Tests are written by the subagent `test-writer`.
+Tests are written only by the subagent `test-writer`. Call it before you
+implement a feature or change its behaviour:
 
-Call `test-writer` before you implement a feature or change its behaviour:
-
-1. Identify the requirements from `SPEC.md` that your task touches
+1. At the start of the run, create `agent-logs/client-requests/<run>.md` with
+   the client's prompt, copied word for word, and a numbered list of the
+   client's wishes (C1, C2, ...), one testable wish per item. Never change
+   this file afterwards.
+2. Identify the requirements from `SPEC.md` that your task touches
    (e.g. F1, F3).
-2. Make sure the interface the tests need exists: the types and function
-   signatures in `lib/types.ts` and the exported function names.
-3. Call `test-writer` with exactly this information:
-   - the requirement IDs,
+3. Make sure the interface the tests need exists: the types and function
+   signatures and the exported function names.
+4. Call `test-writer` (exactly this name) with only this information:
+   - the requirement IDs (C and F/N),
+   - the path of the client request file,
    - where the interface is defined.
 
    Do not add anything else: no descriptions of your implementation, no
    failing test output, no requests to change existing tests.
-4. Implement the feature until all checks in "Running Commands" pass.
+5. Implement the feature and run the verification loop (see "Commands").
 
-If you believe a test is wrong, do not ask `test-writer` to change it.
-Stop and report which test you think is wrong and why (see "When a Problem
-Cannot Be Solved").
+If `test-writer` cannot be called, retry once. If it fails again, stop and
+report. Never write tests yourself.
 
 ## Commands
 
-### Running Commands
+### Verification Loop
 
-Run these checks in this order after every change.
-You are only done when all five pass.
+After every change, run one **attempt**:
 
-1. `npx tsc --noEmit` — type and syntax check
-2. `npm test` — unit tests with Vitest (runs once, no watch mode)
-3. The `accessibility_audit` tool with `target: "app"` — static accessibility
-   check. It passes when the report contains no issues.
-4. The `seo_audit` tool with `target: "app"` — static SEO check.
-   It passes when the report contains no SEO issues.
-5. `npm run build` — production build. Finds errors that the other checks miss,
-   e.g. a component that uses hooks or event handlers without `"use client"`.
+1. `npm run verify -- <run>`: runs the type check, the unit tests and, if both
+   pass, the production build. It logs the full output, numbers the attempt
+   and prints a short summary.
+2. The `accessibility_audit` tool with `target: "app"`. It passes when its
+   status is `no-findings`.
+3. The `seo_audit` tool with `target: "app"`. It passes when its status is
+   `no-findings`.
+4. Append the attempt to the verification summary (see "Log Files").
 
-Run tests only via `npm test`. Do not call `npx vitest` directly.
+`<run>` is the base name of this run: `YYYY-MM-DD_HH-MM_<short-task-description>`,
+lowercase with hyphens, e.g. `2026-11-15_14-30_fussball-seite`. Use the same
+name for every attempt and every log file of the run.
 
-An **attempt** is one run of all five checks after a change. Number the attempts
-of a run starting at 1. If a check still fails after 5 attempts, stop. Do not
-keep trying. Report what fails and what the client can try next.
+You are done when `verify` prints `RESULT: ALL PASSED` and both audits report
+`no-findings`. There is no limit on attempts, but the number of steps per task
+is limited. Keep the verification summary up to date after every attempt, so
+it is complete even if the step limit stops you.
+
+Use `npm run verify` for the type check, tests and build. The plain commands
+are blocked.
 
 To start the dev server: `npm run dev` (only on request; it keeps running).
 
-### Logging Output of Commands
+### When a Problem Cannot Be Solved
 
-Every check is logged in its own folder under `agent-logs/verification-logs/`.
-`<run>` is the base name of the development log of this run
-(e.g. `2026-10-21_13-45_startseite-termine-sponsoren`), `<n>` is the attempt number.
+Stop, change nothing more, and report to the client when:
 
-At the start of the run, create the folders once:
+- `verify` prints `CANNOT VERIFY`.
+- You believe a test is wrong. Report which test and why. Do not ask
+  `test-writer` to change it.
+- An action you need is denied by the harness (see "Write Protection").
 
-```bash
-mkdir -p agent-logs/verification-logs/{syntax-logs,test-logs,accessibility-logs,seo-logs,build-logs}
-```
-
-Then run the checks with these commands instead of the plain ones. Each command
-shows the output to you and appends it to the log file:
-
-1. Type check:
-   ```bash
-   { echo "=== attempt <n> | $(date -Iseconds) ==="; npx tsc --noEmit 2>&1; echo "exit code: $?"; } | tee -a agent-logs/verification-logs/syntax-logs/<run>.log
-   ```
-2. Tests:
-   ```bash
-   { echo "=== attempt <n> | $(date -Iseconds) ==="; npm test 2>&1; echo "exit code: $?"; } | tee -a agent-logs/verification-logs/test-logs/<run>.log
-   ```
-3. Accessibility: `accessibility_audit` is a tool, not a shell command. After each
-   call, write its JSON report unchanged to a new file:
-   `agent-logs/verification-logs/accessibility-logs/<run>_attempt-<n>.json`
-4. SEO: `seo_audit` is a tool, not a shell command. After each call, write its
-   JSON report unchanged to a new file:
-   `agent-logs/verification-logs/seo-logs/<run>_attempt-<n>.json`
-5. Build:
-   ```bash
-   { echo "=== attempt <n> | $(date -Iseconds) ==="; npm run build 2>&1; echo "exit code: $?"; } | tee -a agent-logs/verification-logs/build-logs/<run>.log
-   ```
-
-A check passed only if its exit code is `0` (for the accessibility and SEO
-audits: no issues in the report). Never edit or delete existing log entries.
+In the report, state which check fails, what you tried, the probable cause
+(code, test or `SPEC.md`) and what the client can do next.
 
 ### Log Files
 
-Every run produces two log files with the same base name:
-`YYYY-MM-DD_HH-MM_<short-task-description>.md`
-(lowercase and hyphens, e.g. `2026-10-21_13-45_startseite-termine-sponsoren.md`).
+| File | Written by | When |
+|------|------------|------|
+| `agent-logs/client-requests/<run>.md` | you | start of the run |
+| `agent-logs/verification-logs/{syntax,test,build}-logs/<run>.log` | `npm run verify` | every attempt; do not write these yourself |
+| `agent-logs/verification-logs/<run>.md` | you | after every attempt |
+| `agent-logs/development-logs/<run>.md` | you | end of the run |
 
-#### Development Log (`agent-logs/development-logs/`)
+Never edit or delete existing log entries.
+
+#### Verification Summary (`agent-logs/verification-logs/<run>.md`)
+
+After every attempt, append one entry:
+
+- Attempt number (as printed by `verify`)
+- Result of `verify` for each check: passed, failed or not run
+- Status of both audits and, if there are findings, their number and rule names
+- For each failed check: the failing test or error in one line, and the
+  change you made in response (which file, what you changed)
+
+Do not copy raw output or the audit JSON. The last entry states the outcome:
+all checks passed, or the run was stopped (after which attempt, and why).
+
+#### Development Log (`agent-logs/development-logs/<run>.md`)
 
 Write this file at the end of the run.
 
 - What the task was
 - Which files you created or changed
-- The final result of every check from "Commands"
-- Whether the run finished successfully or was stopped (see "When a Problem
-  Cannot Be Solved")
+- The final result of every check
+- Whether the run finished successfully or was stopped
 - Open questions
-
-#### Verification Summary (`agent-logs/verification-logs/<run>.md`)
-
-Create this file at the start of the run, next to the four log folders.
-After every attempt, append one entry:
-
-- Attempt number
-- Which checks failed (or "all passed")
-- For each failed check: the failing test or error in one line, and the
-  change you made in response (which file, what you changed)
-
-Do not copy raw output; it is already in the log folders under the same
-attempt number. Do not rewrite earlier entries.
-
-The last entry states the outcome: all checks passed, or the run was stopped
-(after which attempt, and why).
 
 #### Git
 
-if the project is a git repository, make sure `agent-logs/` is 
-listed in `.gitignore`. Add it if it is missing.
+If the project is a git repository, make sure `agent-logs/` is listed in
+`.gitignore`. Add it if it is missing.
 
 ### Final Report
 
 After each completed task, give the client a short final report in the chat:
-what you did, whether all commands passed, and what is still open.
-Refer to the logs file by its path.
+what you did, whether all checks passed, and what is still open.
+Refer to the log files by their paths.
 
 ## Accessibility
 
@@ -351,20 +333,12 @@ Lighthouse is not installed in the project.
   given. For children, parental consent is required.
 - Never claim a licence yourself unless you know it from a source.
 
-## Protected Files
+## Write Protection
 
-Do not change, delete or move these files and folders. If a task seems to
-require it, stop and ask.
+The harness blocks changes to its own files, the tests, the test setup,
+`tsconfig.json`, generated folders and all `.env*` files (see `opencode.json`).
+If an action is denied, do not try another way to do it (e.g. a different
+command or tool). Stop and report (see "When a Problem Cannot Be Solved").
 
-| Path                                             | Reason                                                        |
-|--------------------------------------------------|---------------------------------------------------------------|
-| `AGENTS.md`, `SPEC.md`                           | Written by the team; they define your rules and requirements. |
-| `opencode.json`, `.opencode/`                    | Harness configuration and custom tools.                       |
-| `package.json` dependencies, `package-lock.json` | Change only after the client approved a new dependency.       |
-| `tsconfig.json`                                  | Strict mode must stay enabled.                                |
-| `node_modules/`, `.next/`                        | Generated by npm and Next.js.                                 |
-| `agent-logs/`                                    | Add new log files only. Never edit or delete existing ones.   |
-| `vitest.config.ts`                               | Test setup provided by the harness.                           |
-
-Do not open, read or create `.env`, `.env.local` or any other `.env*` file.
-They may contain secrets, and everything you read is sent to the model provider.
+`package.json` and `package-lock.json` may only change after the client has
+approved a new dependency.

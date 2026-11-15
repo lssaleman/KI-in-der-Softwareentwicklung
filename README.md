@@ -49,6 +49,8 @@ Danach kann direkt ein Auftrag als Prompt eingegeben werden.
 | `SPEC.md` | Spezifikation der Vereinswebseite |
 | `opencode.json` | Modell und Berechtigungen (harte Restriktionen) |
 | `.opencode/tools/` | Eigene Tools, z. B. `accessibility_audit` |
+| `.opencode/agents/` | Subagent `test-writer`, schreibt die Tests |
+| `.opencode/scripts/verify.mjs` | Prüfskript (`npm run verify`): Typprüfung, Tests, Build, Logging, Versuchslimit |
 
 ### Harness in ein anderes Projekt übernehmen
 
