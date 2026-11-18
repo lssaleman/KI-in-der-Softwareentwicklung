@@ -10,13 +10,37 @@
     "clean": "node -e \"import('node:fs').then(fs => fs.rmSync('node_modules', { recursive: true, force: true }))\"",
     "check": "npm ls",
     "reinstall": "npm run clean && npm install",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
     "verify": "node .opencode/scripts/verify.mjs"
   },
   "dependencies": {
     "@opencode-ai/plugin": "1.19.4",
-    "@typescript-eslint/parser": "^8.0.0"
+    "@supabase/supabase-js": "2.119.0",
+    "@tailwindcss/postcss": "4.3.5",
+    "next": "16.4.6",
+    "postcss": "8.5.33",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "tailwindcss": "4.3.5"
   },
   "devDependencies": {
-    "@types/node": "26.6.5"
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.3",
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@typescript-eslint/eslint-plugin": "8.73.0",
+    "@typescript-eslint/parser": "8.73.0",
+    "eslint": "9.39.5",
+    "jsdom": "26.1.0",
+    "prettier": "3.10.1",
+    "typescript": "5.9.3",
+    "vitest": "4.1.12"
   }
 }
