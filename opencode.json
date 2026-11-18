@@ -30,6 +30,7 @@
       "npx vitest*": "deny",
       "npx tsc*": "deny",
       "npm run verify*": "allow",
+      "npm run format*": "allow", // NEU
       "npm run test*": "allow", // NEU
       "npm run build*": "deny",
       "npm test*": "deny",
