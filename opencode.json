@@ -24,13 +24,15 @@
       "ls *": "allow",
       "pwd": "allow",
       "cat *": "allow",
+      "mkdir *": "allow", // NEU
       "head *": "allow",
       "tail *": "allow",
-      "npm run verify*": "allow",
+      "npx vitest*": "deny",
       "npx tsc*": "deny",
+      "npm run verify*": "allow",
+      "npm run test*": "allow", // NEU
       "npm run build*": "deny",
       "npm test*": "deny",
-      "npx vitest*": "deny",
       "git commit*": "deny",
       "git push*": "deny",
       "rm -rf*": "deny",
