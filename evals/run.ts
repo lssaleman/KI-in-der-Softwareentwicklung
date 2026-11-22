@@ -36,6 +36,9 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { parseArgs } from 'node:util'
 import { TASKS, type EvalTask } from './tasks'
+import { execFile } from 'node:child_process'
+import { promisify } from 'node:util'
+import { writeFile, mkdir } from 'node:fs/promises'
 
 const ROOT = process.cwd()
 const HARNESS_FILES = ['AGENTS.md', 'opencode.json', '.opencode']
@@ -306,22 +309,43 @@ function emptyUsage(): Usage {
   return { steps: 0, toolCalls: 0, compactions: 0, sessions: 0, input: 0, output: 0, reasoning: 0, cacheRead: 0, cacheWrite: 0, cost: 0 }
 }
 
-function exportTo(dir: string, id: string, file: string): Promise<void> {
-  return new Promise((resolve) => {
-    const fd = openSync(file, 'w')
-    const child = spawn('opencode', ['export', id], {
-      cwd: dir,
-      env: { ...process.env, PWD: dir },
-      stdio: ['ignore', fd, 'ignore'],
-    })
-    const done = () => {
-      closeSync(fd)
-      resolve()
+const execFileAsync = promisify(execFile)
+
+async function exportTo(
+  dir: string,
+  id: string,
+  file: string,
+): Promise<void> {
+  await mkdir(path.dirname(file), { recursive: true })
+
+  try {
+    const { stdout, stderr } = await execFileAsync(
+      'opencode',
+      ['export', id],
+      {
+        cwd: dir,
+        encoding: 'utf8',
+        maxBuffer: 100 * 1024 * 1024,
+      },
+    )
+
+    await writeFile(file, stdout, 'utf8')
+
+    console.log(`Export ${id}: ${stdout.length} bytes`)
+
+    if (stderr.trim()) {
+      console.log(`Export stderr: ${stderr.trim()}`)
     }
-    child.on('error', done)
-    child.on('close', done)
-  })
+
+    if (!stdout.trim()) {
+      console.error(`Export returned empty output for ${id}`)
+    }
+  } catch (error) {
+    console.error(`Export failed for ${id}:`, error)
+    throw error
+  }
 }
+
 
 
 

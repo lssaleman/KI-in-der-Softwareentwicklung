@@ -9,7 +9,7 @@ export type EvalTask = {
 export const TASKS: EvalTask[] = [
     {
     id: "startseite",
-    size: "S",
+    size: "L",
     start: "startseite",
     minutes: 40,
     check: {
