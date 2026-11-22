@@ -286,6 +286,22 @@ type ExportPart = {
   tokens?: { input: number; output: number; reasoning: number; cache: { read: number; write: number } }
 }
 
+type ExportData = {
+  info?: {
+    cost?: number
+    tokens?: {
+      input: number
+      output: number
+      reasoning: number
+      cache: {
+        read: number
+        write: number
+      }
+    }
+  }
+  messages?: { parts?: ExportPart[] }[]
+}
+
 function emptyUsage(): Usage {
   return { steps: 0, toolCalls: 0, compactions: 0, sessions: 0, input: 0, output: 0, reasoning: 0, cacheRead: 0, cacheWrite: 0, cost: 0 }
 }
@@ -307,39 +323,91 @@ function exportTo(dir: string, id: string, file: string): Promise<void> {
   })
 }
 
-async function usage(dir: string, sessions: string[], logDir: string, label: string): Promise<Usage> {
+
+async function usage(
+  dir: string,
+  sessions: string[],
+  logDir: string,
+  label: string,
+): Promise<Usage> {
   const total = emptyUsage()
+
   for (const id of sessions.filter(Boolean)) {
-    // stdout goes straight into a file: through a pipe, opencode export cuts
-    // its output off at about 64 KB when it exits.
     const file = path.join(logDir, `${label}-export-${id}.json`)
+
     await exportTo(dir, id, file)
+
     const text = readFileSync(file, 'utf8')
     const start = text.indexOf('{')
-    if (start < 0) continue
-    let data: { messages?: { parts?: ExportPart[] }[] }
+
+    if (start < 0) {
+      console.warn(`     empty export for session ${id}`)
+      continue
+    }
+
+    type ExportData = {
+      info?: {
+        cost?: number
+        tokens?: {
+          input: number
+          output: number
+          reasoning: number
+          cache: {
+            read: number
+            write: number
+          }
+        }
+      }
+      messages?: {
+        parts?: ExportPart[]
+      }[]
+    }
+
+    let data: ExportData
+
     try {
       data = JSON.parse(text.slice(start))
     } catch {
       console.warn(`     could not parse ${path.relative(ROOT, file)}`)
       continue
     }
+
     total.sessions += 1
-    for (const part of (data.messages ?? []).flatMap((m) => m.parts ?? [])) {
-      if (part.type === 'tool') total.toolCalls += 1
-      if (part.type === 'compaction') total.compactions += 1
-      if (part.type !== 'step-finish' || !part.tokens) continue
-      total.steps += 1
-      total.cost += part.cost ?? 0
-      total.input += part.tokens.input
-      total.output += part.tokens.output
-      total.reasoning += part.tokens.reasoning
-      total.cacheRead += part.tokens.cache.read
-      total.cacheWrite += part.tokens.cache.write
+
+    // Gesamtkosten und Tokenverbrauch aus dem Session-Export
+    const usage = data.info?.tokens
+
+    if (usage) {
+      total.input += usage.input ?? 0
+      total.output += usage.output ?? 0
+      total.reasoning += usage.reasoning ?? 0
+      total.cacheRead += usage.cache?.read ?? 0
+      total.cacheWrite += usage.cache?.write ?? 0
+    }
+
+    total.cost += data.info?.cost ?? 0
+
+    // Steps, Tool-Aufrufe und Compactions aus den Nachrichten
+    for (const part of (data.messages ?? []).flatMap(
+      (message) => message.parts ?? [],
+    )) {
+      if (part.type === 'tool') {
+        total.toolCalls += 1
+      }
+
+      if (part.type === 'compaction') {
+        total.compactions += 1
+      }
+
+      if (part.type === 'step-finish') {
+        total.steps += 1
+      }
     }
   }
+
   return total
 }
+
 
 const tokens = (u: Usage) => u.input + u.output + u.reasoning + u.cacheRead + u.cacheWrite
 
