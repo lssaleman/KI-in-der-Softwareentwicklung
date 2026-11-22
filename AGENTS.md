@@ -342,3 +342,10 @@ command or tool). Stop and report (see "When a Problem Cannot Be Solved").
 
 `package.json` and `package-lock.json` may only change after the client has
 approved a new dependency.
+
+## Long Tasks
+
+keep the plan in notes/progress.md, read it first if it exists, 
+otherwise create it from the spec as small steps with a check each; 
+after each step run the check and update the file (ticked steps, decisions, open errors); 
+update it before stopping.
