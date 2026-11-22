@@ -41,7 +41,7 @@ import { promisify } from 'node:util'
 import { writeFile, mkdir } from 'node:fs/promises'
 
 const ROOT = process.cwd()
-const HARNESS_FILES = ['AGENTS.md', 'opencode.json', '.opencode']
+const HARNESS_FILES = ['AGENTS.md', 'opencode.json', '.opencode', 'SPEC.md']
 
 type Options = {
   harness: string
