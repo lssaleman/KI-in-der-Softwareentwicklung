@@ -324,6 +324,7 @@ function exportTo(dir: string, id: string, file: string): Promise<void> {
 }
 
 
+
 async function usage(
   dir: string,
   sessions: string[],
@@ -332,16 +333,32 @@ async function usage(
 ): Promise<Usage> {
   const total = emptyUsage()
 
+  console.log('\n--- USAGE DEBUG ---')
+  console.log('Sessions:', sessions)
+
   for (const id of sessions.filter(Boolean)) {
+    console.log('\nProcessing session:', id)
+
     const file = path.join(logDir, `${label}-export-${id}.json`)
 
     await exportTo(dir, id, file)
 
+    console.log('Export file:', file)
+    console.log('File exists:', existsSync(file))
+
+    if (!existsSync(file)) {
+      console.warn('Export file was not created:', id)
+      continue
+    }
+
     const text = readFileSync(file, 'utf8')
+
+    console.log('File size:', text.length)
+
     const start = text.indexOf('{')
 
     if (start < 0) {
-      console.warn(`     empty export for session ${id}`)
+      console.warn('No JSON object found:', id)
       continue
     }
 
@@ -349,12 +366,12 @@ async function usage(
       info?: {
         cost?: number
         tokens?: {
-          input: number
-          output: number
-          reasoning: number
-          cache: {
-            read: number
-            write: number
+          input?: number
+          output?: number
+          reasoning?: number
+          cache?: {
+            read?: number
+            write?: number
           }
         }
       }
@@ -367,27 +384,29 @@ async function usage(
 
     try {
       data = JSON.parse(text.slice(start))
-    } catch {
-      console.warn(`     could not parse ${path.relative(ROOT, file)}`)
+    } catch (error) {
+      console.warn('Could not parse export:', id, error)
       continue
     }
 
+    console.log('Export info:', JSON.stringify(data.info, null, 2))
+
     total.sessions += 1
 
-    // Gesamtkosten und Tokenverbrauch aus dem Session-Export
-    const usage = data.info?.tokens
+    const usageData = data.info?.tokens
 
-    if (usage) {
-      total.input += usage.input ?? 0
-      total.output += usage.output ?? 0
-      total.reasoning += usage.reasoning ?? 0
-      total.cacheRead += usage.cache?.read ?? 0
-      total.cacheWrite += usage.cache?.write ?? 0
+    if (usageData) {
+      total.input += usageData.input ?? 0
+      total.output += usageData.output ?? 0
+      total.reasoning += usageData.reasoning ?? 0
+      total.cacheRead += usageData.cache?.read ?? 0
+      total.cacheWrite += usageData.cache?.write ?? 0
+    } else {
+      console.warn('No token information found:', id)
     }
 
     total.cost += data.info?.cost ?? 0
 
-    // Steps, Tool-Aufrufe und Compactions aus den Nachrichten
     for (const part of (data.messages ?? []).flatMap(
       (message) => message.parts ?? [],
     )) {
@@ -403,10 +422,17 @@ async function usage(
         total.steps += 1
       }
     }
+
+    console.log('Session processed:', id)
   }
+
+  console.log('\n--- USAGE TOTAL ---')
+  console.log(JSON.stringify(total, null, 2))
+  console.log('--- END USAGE DEBUG ---\n')
 
   return total
 }
+
 
 
 const tokens = (u: Usage) => u.input + u.output + u.reasoning + u.cacheRead + u.cacheWrite
@@ -501,37 +527,95 @@ async function selfTest(opts: Options, logRoot: string) {
   process.exitCode = ok ? 0 : 1
 }
 
+
 async function main() {
   const opts = options()
-  const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-')
-  const logRoot = path.join(ROOT, 'evals', 'runs', `${stamp}-${opts.selfTest ? 'self-test' : opts.harness.replace(/[^\w.-]/g, '_')}`)
+
+  const stamp = new Date().toISOString()
+    .slice(0, 16)
+    .replace(/[:T]/g, '-')
+
+  const logRoot = path.join(
+    ROOT,
+    'evals',
+    'runs',
+    `${stamp}-${opts.selfTest ? 'self-test' : opts.harness.replace(/[^\w.-]/g, '_')}`,
+  )
+
   mkdirSync(logRoot, { recursive: true })
+
   if (opts.selfTest) return selfTest(opts, logRoot)
 
   const commit = git(ROOT, 'rev-parse', '--short', opts.harness)
-  console.log(`Harness ${opts.harness} (${commit}), ${opts.tasks.length} tasks x ${opts.runs} runs, bash ${opts.bash}`)
+
+  console.log(
+    `Harness ${opts.harness} (${commit}), ${opts.tasks.length} tasks x ${opts.runs} runs, bash ${opts.bash}`,
+  )
+
   const rows: Row[] = []
+
   for (const task of opts.tasks) {
     for (let i = 1; i <= opts.runs; i++) {
       const label = `${task.id}-${i}`
+
       const logDir = path.join(logRoot, task.id)
       mkdirSync(logDir, { recursive: true })
+
       const dir = makeSandbox(task, opts.harness)
 
-      const agent = await runAgent(task, dir, opts, path.join(logDir, `${label}.jsonl`))
+      console.log(`\nStarting agent: ${label}`)
+
+      const agent = await runAgent(
+        task,
+        dir,
+        opts,
+        path.join(logDir, `${label}.jsonl`),
+      )
+
+      console.log('\n--- AGENT DEBUG ---')
+      console.log('Session ID:', agent.sessionId)
+      console.log('Subagent sessions:', agent.children)
+      console.log('Exit:', agent.exit)
+      console.log('Minutes:', agent.minutes)
+      console.log('--- END AGENT DEBUG ---\n')
+
       const result = await check(task, dir, logDir, label)
-      const used = await usage(dir, [agent.sessionId, ...agent.children], logDir, label)
-      rows.push({ task: task.id, run: i, check: result, minutes: agent.minutes, exit: agent.exit, sessionId: agent.sessionId, usage: used })
+
+      const used = await usage(
+        dir,
+        [agent.sessionId, ...agent.children],
+        logDir,
+        label,
+      )
+
+      rows.push({
+        task: task.id,
+        run: i,
+        check: result,
+        minutes: agent.minutes,
+        exit: agent.exit,
+        sessionId: agent.sessionId,
+        usage: used,
+      })
+
       console.log(
         `${result.pass ? 'PASS' : 'FAIL'} ${label.padEnd(20)} acceptance ${result.acceptance.padEnd(16)} ` +
-          `${fmt(agent.minutes, 1)} min, ${used.steps} steps, ${tokens(used)} tokens, ${agent.exit}`,
+        `${fmt(agent.minutes, 1)} min, ${used.steps} steps, ${tokens(used)} tokens, ${agent.exit}`,
       )
-      if (opts.keep) console.log(`     sandbox kept: ${dir}`)
-      else rmSync(dir, { recursive: true, force: true })
+
+      if (opts.keep) {
+        console.log(`Sandbox kept: ${dir}`)
+      } else {
+        rmSync(dir, { recursive: true, force: true })
+      }
     }
   }
+
   const base = writeResults(rows, opts, stamp, commit)
-  console.log(`\nResults: ${path.relative(ROOT, base)}.md and .csv`)
+
+  console.log(
+    `\nResults: ${path.relative(ROOT, base)}.md and .csv`,
+  )
 }
 
 main().catch((error: Error) => {
