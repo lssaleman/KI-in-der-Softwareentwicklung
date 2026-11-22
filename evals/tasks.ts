@@ -1,17 +1,20 @@
-export interface EvalTask {
-  id: string;
-  startRef: string;
-  budgetMinutes: number;
-  promptFile: string;
-  checkFile: string;
+export type EvalTask = {
+  id: string
+  size: 'S' | 'M' | 'L'
+  start: string
+  minutes: number
+  check: { hidden: true } | { hidden: false; files: string[] }
 }
 
 export const TASKS: EvalTask[] = [
     {
     id: "startseite",
-    startRef: "vl08",
-    budgetMinutes: 40,
-    promptFile: "evals/tasks/startseite/prompt.md",
-    checkFile: "evals/tasks/startseite/check.test.ts",
+    size: "S",
+    start: "startseite",
+    minutes: 40,
+    check: {
+      hidden: false,
+      files: ["evals/tasks/startseite/check.test.ts"]
+    }
   },
 ];
