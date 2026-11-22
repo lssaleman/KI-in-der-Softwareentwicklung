@@ -178,9 +178,13 @@ function makeSandbox(task: EvalTask, harness: string): string {
 
 // ---------- check ----------
 
-type VitestReport = { numTotalTests: number; numPassedTests: number }
 
-async function check(task: EvalTask, dir: string, logDir: string, label: string): Promise<Check> {
+async function check(
+  task: EvalTask,
+  dir: string,
+  logDir: string,
+  label: string,
+): Promise<Check> {
   const result: Check = {
     migrations: false,
     acceptance: '',
@@ -190,25 +194,77 @@ async function check(task: EvalTask, dir: string, logDir: string, label: string)
     lint: false,
     pass: false,
   }
-  // Tests as in the start state, whatever the agent did to them.
-  git(dir, 'checkout', 'HEAD', '--', 'tests')
+
+  // Tests auf den ursprünglichen Stand zurücksetzen.
+  const testsDir = path.join(dir, 'tests')
+
+  if (existsSync(testsDir)) {
+    git(dir, 'checkout', 'HEAD', '--', 'tests')
+  }
+
   let files: string[]
+
   if (task.check.hidden) {
-    const target = path.join('tests', 'acceptance', `zz-eval-${task.id}.test.ts`)
-    copyFileSync(path.join(ROOT, 'evals', 'tasks', task.id, 'check.test.ts'), path.join(dir, target))
+    const target = path.join(
+      'tests',
+      'acceptance',
+      `zz-eval-${task.id}.test.ts`,
+    )
+
+    const source = path.join(
+      ROOT,
+      'evals',
+      'tasks',
+      task.id,
+      'check.test.ts',
+    )
+
+    mkdirSync(path.dirname(path.join(dir, target)), { recursive: true })
+    copyFileSync(source, path.join(dir, target))
+
     files = [target]
   } else {
     files = task.check.files
   }
 
-
   const vitest = path.join(dir, 'node_modules', '.bin', 'vitest')
-  result.unit = (await run(vitest, ['run'], dir)).code === 0
-  result.typecheck = (await run('npm', ['run', '--silent', 'typecheck'], dir)).code === 0
-  result.lint = (await run('npm', ['run', '--silent', 'lint'], dir)).code === 0
-  result.pass = result.acceptanceOk && result.unit && result.typecheck && result.lint
+
+  // 1. Acceptance-Tests
+  if (files.length > 0) {
+    const acceptance = await run(vitest, ['run', ...files], dir)
+
+    result.acceptanceOk = acceptance.code === 0
+    result.acceptance = result.acceptanceOk ? 'passed' : 'failed'
+  } else {
+    result.acceptance = 'no tests configured'
+    result.acceptanceOk = false
+  }
+
+  // 2. Unit-Tests
+  result.unit = (
+    await run(vitest, ['run'], dir)
+  ).code === 0
+
+  // 3. TypeScript
+  result.typecheck = (
+    await run('npm', ['run', '--silent', 'typecheck'], dir)
+  ).code === 0
+
+  // 4. Lint
+  result.lint = (
+    await run('npm', ['run', '--silent', 'lint'], dir)
+  ).code === 0
+
+  // 5. Gesamtergebnis
+  result.pass =
+    result.acceptanceOk &&
+    result.unit &&
+    result.typecheck &&
+    result.lint
+
   return result
 }
+
 
 // ---------- agent ----------
 
