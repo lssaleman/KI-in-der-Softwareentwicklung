@@ -41,14 +41,27 @@
     "webfetch": "ask",
     "websearch": "ask",
     "external_directory": "deny"
+  }, 
+  "mcp": {
+    "servers": {
+      "supabase": {
+        "type": "remote",
+        "url": "https://mcp.supabase.com/mcp?project_ref=yikbqfcpohgitejypbzw&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cfeedback%2Cnotebooks"
+      }
+    }
   },
   "tools": {
     "accessibility_audit": true,
-    "seo_audit": true
+    "seo_audit": true,
+    "supabase_*": false
   },
   "agent": {
     "build": {
-      "steps": 120
+      "steps": 120, 
+      "tools": {
+        "supabase_*": true
+      }
     }
   }
+
 }

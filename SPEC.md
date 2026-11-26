@@ -250,4 +250,3 @@ also offers a simple way to sign up for a trial training session.
 
 - Login and user accounts
 - Role and permission management
-- Connection to a real database
