@@ -29,8 +29,8 @@ export const TASKS: EvalTask[] = [
   {
     id: "helloworld",
     size: "S",
-    start: "startseite",
-    minutes: 15,
+    start: "tests-startzustand",
+    minutes: 3,
     check: {
       hidden: true
     }

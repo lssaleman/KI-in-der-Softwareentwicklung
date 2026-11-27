@@ -3,7 +3,10 @@ import tsPlugin from "@typescript-eslint/eslint-plugin";
 
 export default [
   {
-    ignores: [".next/**", "node_modules/**", "agent-logs/**", "next-env.d.ts"],
+    ignores: [".next/**", "node_modules/**", "agent-logs/**", "next-env.d.ts", 
+      ".opencode/tools/**",                                                                      
+       "scripts/test-demo-env.ts",  
+    ],
   },
   {
     files: ["**/*.{ts,tsx}"],
