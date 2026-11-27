@@ -24,14 +24,14 @@
       "ls *": "allow",
       "pwd": "allow",
       "cat *": "allow",
-      "mkdir *": "allow", // NEU
+      "mkdir *": "allow", 
       "head *": "allow",
       "tail *": "allow",
       "npx vitest*": "deny",
       "npx tsc*": "deny",
       "npm run verify*": "allow",
-      "npm run format*": "allow", // NEU
-      "npm run test*": "allow", // NEU
+      "npm run format*": "allow", 
+      "npm run test*": "allow", 
       "npm run build*": "deny",
       "npm test*": "deny",
       "git commit*": "deny",
@@ -44,6 +44,15 @@
     "webfetch": "ask",
     "websearch": "ask",
     "external_directory": "deny"
+  },
+  "mcp": {
+    "servers": {
+      "supabase": {
+        "enabled": false,
+        "type": "remote",
+        "url": "https://mcp.supabase.com/mcp?project_ref=oxjmnufisirduhymikqb&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cfeedback%2Cnotebooks"
+      }
+    }
   },
   "tools": {
     "accessibility_audit": true,

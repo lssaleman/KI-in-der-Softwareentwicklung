@@ -35,13 +35,11 @@ import {
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { parseArgs } from 'node:util'
-import { TASKS, type EvalTask } from './tasks'
-import { execFile } from 'node:child_process'
-import { promisify } from 'node:util'
-import { writeFile, mkdir } from 'node:fs/promises'
+import { loadDemoEnv, runSupabase, tail } from '../scripts/demo-db.ts'
+import { TASKS, type EvalTask } from './tasks.ts'
 
 const ROOT = process.cwd()
-const HARNESS_FILES = ['AGENTS.md', 'opencode.json', '.opencode', 'SPEC.md']
+const HARNESS_FILES = ['AGENTS.md', 'opencode.json', '.opencode']
 
 type Options = {
   harness: string
@@ -175,16 +173,24 @@ function makeSandbox(task: EvalTask, harness: string): string {
   return dir
 }
 
+// ---------- database ----------
+
+async function resetDb(dir: string): Promise<{ ok: boolean; output: string }> {
+  // KL_EVAL_RESET_CMD: alternative reset for testing the runner without Supabase.
+  const custom = process.env.KL_EVAL_RESET_CMD
+  if (custom) {
+    const result = await run('sh', ['-c', `${custom} "$0"`, dir], dir)
+    return { ok: result.code === 0, output: result.output }
+  }
+  const demo = loadDemoEnv(ROOT)
+  return runSupabase(['db', 'reset'], dir, demo.dbUrl)
+}
 
 // ---------- check ----------
 
+type VitestReport = { numTotalTests: number; numPassedTests: number }
 
-async function check(
-  task: EvalTask,
-  dir: string,
-  logDir: string,
-  label: string,
-): Promise<Check> {
+async function check(task: EvalTask, dir: string, logDir: string, label: string): Promise<Check> {
   const result: Check = {
     migrations: false,
     acceptance: '',
@@ -194,77 +200,47 @@ async function check(
     lint: false,
     pass: false,
   }
-
-  // Tests auf den ursprünglichen Stand zurücksetzen.
-  const testsDir = path.join(dir, 'tests')
-
-  if (existsSync(testsDir)) {
-    git(dir, 'checkout', 'HEAD', '--', 'tests')
-  }
-
+  // Tests as in the start state, whatever the agent did to them.
+  git(dir, 'checkout', 'HEAD', '--', 'tests')
   let files: string[]
-
   if (task.check.hidden) {
-    const target = path.join(
-      'tests',
-      'acceptance',
-      `zz-eval-${task.id}.test.ts`,
-    )
-
-    const source = path.join(
-      ROOT,
-      'evals',
-      'tasks',
-      task.id,
-      'check.test.ts',
-    )
-
-    mkdirSync(path.dirname(path.join(dir, target)), { recursive: true })
-    copyFileSync(source, path.join(dir, target))
-
+    const target = path.join('tests', 'acceptance', `zz-eval-${task.id}.test.ts`)
+    copyFileSync(path.join(ROOT, 'evals', 'tasks', task.id, 'check.test.ts'), path.join(dir, target))
     files = [target]
   } else {
     files = task.check.files
   }
 
+  const reset = await resetDb(dir)
+  writeFileSync(path.join(logDir, `${label}-reset.log`), reset.output)
+  result.migrations = reset.ok
   const vitest = path.join(dir, 'node_modules', '.bin', 'vitest')
-
-  // 1. Acceptance-Tests
-  if (files.length > 0) {
-    const acceptance = await run(vitest, ['run', ...files], dir)
-
-    result.acceptanceOk = acceptance.code === 0
-    result.acceptance = result.acceptanceOk ? 'passed' : 'failed'
+  if (reset.ok) {
+    const config = process.env.KL_EVAL_VITEST_CONFIG ?? 'vitest.acceptance.config.ts'
+    const report = path.join(logDir, `${label}-acceptance.json`)
+    const acc = await run(
+      vitest,
+      ['run', '--config', config, ...files, '--reporter=json', `--outputFile=${report}`],
+      dir,
+    )
+    writeFileSync(path.join(logDir, `${label}-acceptance.log`), acc.output)
+    try {
+      const data = JSON.parse(readFileSync(report, 'utf8')) as VitestReport
+      result.acceptance = `${data.numPassedTests}/${data.numTotalTests}`
+      result.acceptanceOk = data.numTotalTests > 0 && data.numPassedTests === data.numTotalTests
+    } catch {
+      result.acceptance = 'no report'
+    }
   } else {
-    result.acceptance = 'no tests configured'
-    result.acceptanceOk = false
+    result.acceptance = 'migration failed'
   }
 
-  // 2. Unit-Tests
-  result.unit = (
-    await run(vitest, ['run'], dir)
-  ).code === 0
-
-  // 3. TypeScript
-  result.typecheck = (
-    await run('npm', ['run', '--silent', 'typecheck'], dir)
-  ).code === 0
-
-  // 4. Lint
-  result.lint = (
-    await run('npm', ['run', '--silent', 'lint'], dir)
-  ).code === 0
-
-  // 5. Gesamtergebnis
-  result.pass =
-    result.acceptanceOk &&
-    result.unit &&
-    result.typecheck &&
-    result.lint
-
+  result.unit = (await run(vitest, ['run'], dir)).code === 0
+  result.typecheck = (await run('npm', ['run', '--silent', 'typecheck'], dir)).code === 0
+  result.lint = (await run('npm', ['run', '--silent', 'lint'], dir)).code === 0
+  result.pass = result.acceptanceOk && result.unit && result.typecheck && result.lint
   return result
 }
-
 
 // ---------- agent ----------
 
@@ -345,175 +321,60 @@ type ExportPart = {
   tokens?: { input: number; output: number; reasoning: number; cache: { read: number; write: number } }
 }
 
-type ExportData = {
-  info?: {
-    cost?: number
-    tokens?: {
-      input: number
-      output: number
-      reasoning: number
-      cache: {
-        read: number
-        write: number
-      }
-    }
-  }
-  messages?: { parts?: ExportPart[] }[]
-}
-
 function emptyUsage(): Usage {
   return { steps: 0, toolCalls: 0, compactions: 0, sessions: 0, input: 0, output: 0, reasoning: 0, cacheRead: 0, cacheWrite: 0, cost: 0 }
 }
 
-const execFileAsync = promisify(execFile)
-
-async function exportTo(
-  dir: string,
-  id: string,
-  file: string,
-): Promise<void> {
-  await mkdir(path.dirname(file), { recursive: true })
-
-  try {
-    const { stdout, stderr } = await execFileAsync(
-      'opencode',
-      ['export', id],
-      {
-        cwd: dir,
-        encoding: 'utf8',
-        maxBuffer: 100 * 1024 * 1024,
-      },
-    )
-
-    await writeFile(file, stdout, 'utf8')
-
-    console.log(`Export ${id}: ${stdout.length} bytes`)
-
-    if (stderr.trim()) {
-      console.log(`Export stderr: ${stderr.trim()}`)
+function exportTo(dir: string, id: string, file: string): Promise<void> {
+  return new Promise((resolve) => {
+    const fd = openSync(file, 'w')
+    const child = spawn('opencode', ['export', id], {
+      cwd: dir,
+      env: { ...process.env, PWD: dir },
+      stdio: ['ignore', fd, 'ignore'],
+    })
+    const done = () => {
+      closeSync(fd)
+      resolve()
     }
-
-    if (!stdout.trim()) {
-      console.error(`Export returned empty output for ${id}`)
-    }
-  } catch (error) {
-    console.error(`Export failed for ${id}:`, error)
-    throw error
-  }
+    child.on('error', done)
+    child.on('close', done)
+  })
 }
 
-
-
-
-async function usage(
-  dir: string,
-  sessions: string[],
-  logDir: string,
-  label: string,
-): Promise<Usage> {
+async function usage(dir: string, sessions: string[], logDir: string, label: string): Promise<Usage> {
   const total = emptyUsage()
-
-  console.log('\n--- USAGE DEBUG ---')
-  console.log('Sessions:', sessions)
-
   for (const id of sessions.filter(Boolean)) {
-    console.log('\nProcessing session:', id)
-
+    // stdout goes straight into a file: through a pipe, opencode export cuts
+    // its output off at about 64 KB when it exits.
     const file = path.join(logDir, `${label}-export-${id}.json`)
-
     await exportTo(dir, id, file)
-
-    console.log('Export file:', file)
-    console.log('File exists:', existsSync(file))
-
-    if (!existsSync(file)) {
-      console.warn('Export file was not created:', id)
-      continue
-    }
-
     const text = readFileSync(file, 'utf8')
-
-    console.log('File size:', text.length)
-
     const start = text.indexOf('{')
-
-    if (start < 0) {
-      console.warn('No JSON object found:', id)
-      continue
-    }
-
-    type ExportData = {
-      info?: {
-        cost?: number
-        tokens?: {
-          input?: number
-          output?: number
-          reasoning?: number
-          cache?: {
-            read?: number
-            write?: number
-          }
-        }
-      }
-      messages?: {
-        parts?: ExportPart[]
-      }[]
-    }
-
-    let data: ExportData
-
+    if (start < 0) continue
+    let data: { messages?: { parts?: ExportPart[] }[] }
     try {
       data = JSON.parse(text.slice(start))
-    } catch (error) {
-      console.warn('Could not parse export:', id, error)
+    } catch {
+      console.warn(`     could not parse ${path.relative(ROOT, file)}`)
       continue
     }
-
-    console.log('Export info:', JSON.stringify(data.info, null, 2))
-
     total.sessions += 1
-
-    const usageData = data.info?.tokens
-
-    if (usageData) {
-      total.input += usageData.input ?? 0
-      total.output += usageData.output ?? 0
-      total.reasoning += usageData.reasoning ?? 0
-      total.cacheRead += usageData.cache?.read ?? 0
-      total.cacheWrite += usageData.cache?.write ?? 0
-    } else {
-      console.warn('No token information found:', id)
+    for (const part of (data.messages ?? []).flatMap((m) => m.parts ?? [])) {
+      if (part.type === 'tool') total.toolCalls += 1
+      if (part.type === 'compaction') total.compactions += 1
+      if (part.type !== 'step-finish' || !part.tokens) continue
+      total.steps += 1
+      total.cost += part.cost ?? 0
+      total.input += part.tokens.input
+      total.output += part.tokens.output
+      total.reasoning += part.tokens.reasoning
+      total.cacheRead += part.tokens.cache.read
+      total.cacheWrite += part.tokens.cache.write
     }
-
-    total.cost += data.info?.cost ?? 0
-
-    for (const part of (data.messages ?? []).flatMap(
-      (message) => message.parts ?? [],
-    )) {
-      if (part.type === 'tool') {
-        total.toolCalls += 1
-      }
-
-      if (part.type === 'compaction') {
-        total.compactions += 1
-      }
-
-      if (part.type === 'step-finish') {
-        total.steps += 1
-      }
-    }
-
-    console.log('Session processed:', id)
   }
-
-  console.log('\n--- USAGE TOTAL ---')
-  console.log(JSON.stringify(total, null, 2))
-  console.log('--- END USAGE DEBUG ---\n')
-
   return total
 }
-
-
 
 const tokens = (u: Usage) => u.input + u.output + u.reasoning + u.cacheRead + u.cacheWrite
 
@@ -599,103 +460,47 @@ async function selfTest(opts: Options, logRoot: string) {
     const good = !before.acceptanceOk && Boolean(after?.pass)
     ok &&= good
     console.log(
-  `${good ? 'OK  ' : 'FAIL'} ${task.id.padEnd(18)} start: ${before.acceptance.padEnd(16)} ` +
-    `reference: ${after ? `${after.acceptance}, unit ${after.unit}, typecheck ${after.typecheck}, lint ${after.lint}` : 'patch failed'}`,
-)
+      `${good ? 'OK  ' : 'FAIL'} ${task.id.padEnd(18)} start: ${before.acceptance.padEnd(16)} ` +
+        `reference: ${after ? `${after.acceptance}, unit ${after.unit}, typecheck ${after.typecheck}, lint ${after.lint}` : `patch failed: ${tail(applied.output, 3)}`}`,
+    )
     if (!opts.keep) rmSync(dir, { recursive: true, force: true })
   }
   process.exitCode = ok ? 0 : 1
 }
 
-
 async function main() {
   const opts = options()
-
-  const stamp = new Date().toISOString()
-    .slice(0, 16)
-    .replace(/[:T]/g, '-')
-
-  const logRoot = path.join(
-    ROOT,
-    'evals',
-    'runs',
-    `${stamp}-${opts.selfTest ? 'self-test' : opts.harness.replace(/[^\w.-]/g, '_')}`,
-  )
-
+  const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-')
+  const logRoot = path.join(ROOT, 'evals', 'runs', `${stamp}-${opts.selfTest ? 'self-test' : opts.harness.replace(/[^\w.-]/g, '_')}`)
   mkdirSync(logRoot, { recursive: true })
-
   if (opts.selfTest) return selfTest(opts, logRoot)
 
   const commit = git(ROOT, 'rev-parse', '--short', opts.harness)
-
-  console.log(
-    `Harness ${opts.harness} (${commit}), ${opts.tasks.length} tasks x ${opts.runs} runs, bash ${opts.bash}`,
-  )
-
+  console.log(`Harness ${opts.harness} (${commit}), ${opts.tasks.length} tasks x ${opts.runs} runs, bash ${opts.bash}`)
   const rows: Row[] = []
-
   for (const task of opts.tasks) {
     for (let i = 1; i <= opts.runs; i++) {
       const label = `${task.id}-${i}`
-
       const logDir = path.join(logRoot, task.id)
       mkdirSync(logDir, { recursive: true })
-
       const dir = makeSandbox(task, opts.harness)
+      const reset = await resetDb(dir)
+      if (!reset.ok) throw new Error(`demo database reset failed:\n${tail(reset.output)}`)
 
-      console.log(`\nStarting agent: ${label}`)
-
-      const agent = await runAgent(
-        task,
-        dir,
-        opts,
-        path.join(logDir, `${label}.jsonl`),
-      )
-
-      console.log('\n--- AGENT DEBUG ---')
-      console.log('Session ID:', agent.sessionId)
-      console.log('Subagent sessions:', agent.children)
-      console.log('Exit:', agent.exit)
-      console.log('Minutes:', agent.minutes)
-      console.log('--- END AGENT DEBUG ---\n')
-
+      const agent = await runAgent(task, dir, opts, path.join(logDir, `${label}.jsonl`))
       const result = await check(task, dir, logDir, label)
-
-      const used = await usage(
-        dir,
-        [agent.sessionId, ...agent.children],
-        logDir,
-        label,
-      )
-
-      rows.push({
-        task: task.id,
-        run: i,
-        check: result,
-        minutes: agent.minutes,
-        exit: agent.exit,
-        sessionId: agent.sessionId,
-        usage: used,
-      })
-
+      const used = await usage(dir, [agent.sessionId, ...agent.children], logDir, label)
+      rows.push({ task: task.id, run: i, check: result, minutes: agent.minutes, exit: agent.exit, sessionId: agent.sessionId, usage: used })
       console.log(
         `${result.pass ? 'PASS' : 'FAIL'} ${label.padEnd(20)} acceptance ${result.acceptance.padEnd(16)} ` +
-        `${fmt(agent.minutes, 1)} min, ${used.steps} steps, ${tokens(used)} tokens, ${agent.exit}`,
+          `${fmt(agent.minutes, 1)} min, ${used.steps} steps, ${tokens(used)} tokens, ${agent.exit}`,
       )
-
-      if (opts.keep) {
-        console.log(`Sandbox kept: ${dir}`)
-      } else {
-        rmSync(dir, { recursive: true, force: true })
-      }
+      if (opts.keep) console.log(`     sandbox kept: ${dir}`)
+      else rmSync(dir, { recursive: true, force: true })
     }
   }
-
   const base = writeResults(rows, opts, stamp, commit)
-
-  console.log(
-    `\nResults: ${path.relative(ROOT, base)}.md and .csv`,
-  )
+  console.log(`\nResults: ${path.relative(ROOT, base)}.md and .csv`)
 }
 
 main().catch((error: Error) => {

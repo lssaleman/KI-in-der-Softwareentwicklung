@@ -26,4 +26,13 @@ export const TASKS: EvalTask[] = [
       files: ["evals/tasks/impressum/check.test.ts"]
     }
   },
+  {
+    id: "helloworld",
+    size: "S",
+    start: "startseite",
+    minutes: 15,
+    check: {
+      hidden: true
+    }
+  }
 ];
