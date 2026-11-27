@@ -10,11 +10,18 @@
     "clean": "node -e \"import('node:fs').then(fs => fs.rmSync('node_modules', { recursive: true, force: true }))\"",
     "check": "npm ls",
     "reinstall": "npm run clean && npm install",
-    "verify": "node .opencode/scripts/verify.mjs"
+    "test": "vitest run",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "verify": "node --disable-warning=ExperimentalWarning --disable-warning=MODULE_TYPELESS_PACKAGE_JSON .opencode/scripts/verify.mjs",
+    "perf": "node .opencode/scripts/perf.mjs",
+    "audit:selftest": "node --disable-warning=ExperimentalWarning --disable-warning=MODULE_TYPELESS_PACKAGE_JSON .opencode/scripts/audit-selftest.mjs"
   },
   "dependencies": {
     "@opencode-ai/plugin": "1.19.4",
-    "@typescript-eslint/parser": "^8.0.0"
+    "@typescript-eslint/parser": "^8.0.0",
+    "typescript": "~6.0.3"
   },
   "devDependencies": {
     "@types/node": "26.6.5"

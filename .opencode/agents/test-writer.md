@@ -11,6 +11,22 @@ permission:
     "*": deny
     "npm test": allow
     "npm test *": allow
+    "ls": allow
+    "ls *": allow
+    "pwd": allow
+    "cat *": allow
+    "head *": allow
+    "tail *": allow
+    "wc *": allow
+    "grep *": allow
+    "rg *": allow
+    "git status*": allow
+    "git diff*": allow
+    "git log*": allow
+    "*.env*": deny
+    "npx --no-install tsc --noEmit": allow
+    "npx tsc --noEmit": allow
+
   task: deny
   webfetch: deny
   websearch: deny
@@ -69,6 +85,12 @@ the interface named in the task.
 
 ## Conventions
 
+- The project structure and the code conventions are in `AGENTS.md`
+  ("Directory Structure" and "Code Conventions"). They also apply to tests.
+- To look at files, use the `read`, `glob` and `grep` tools or the read-only
+  shell commands `ls`, `cat`, `head`, `tail`, `wc`, `grep`, `rg`,
+  `git status`, `git diff` and `git log`. The only other shell command you may
+  run is `npm test`.
 - Tests run with Vitest via `npm test`. The test setup (`vitest.config.ts`,
   `vitest.setup.ts` and the `test` script in `package.json`) is provided.
   Do not install another test runner and do not change the test setup.
@@ -83,7 +105,7 @@ the interface named in the task.
   `@testing-library/jest-dom` (e.g. `toBeInTheDocument()`) are available.
 - If a test cannot run with the existing setup, do not work around it.
   Report what is missing.
-- Every function in `app/utils/` and `lib/` is covered by tests.
+- Every function in `app/utils/` is covered by tests.
 - Tests live next to the file they test (`name.test.ts` or `name.test.tsx`).
 - Start every test name with the requirement ID, e.g.
   `it("F1: shows the earliest event first", ...)` or
@@ -106,16 +128,15 @@ For dates, never depend on the real current date. Set a fixed date with
 `vi.useFakeTimers()` and `vi.setSystemTime()`.
 
 ## After Writing
-
-Run `npm test` once. New tests are expected to fail if the feature is not
-implemented yet. They must not fail because of syntax errors or wrong imports.
-
-End with a short report:
-
-- requirement IDs covered (C and F/N),
-- test files created or changed,
-- number of new tests,
-- client wishes you did not test, and why (not testable, or conflicts with
-  `AGENTS.md`),
-- differences between the numbered list and the original prompt,
-- any unclear requirements or contradictions you found.
+ 
+1. Run the type check `npx --no-install tsc --noEmit`. Vitest does not check
+   types, so this is the only way to find type errors in your tests.
+   - Fix every type error in your test files and run the type check again
+     until your test files have none.
+   - Do not silence type errors: no `any`, `@ts-ignore` or `@ts-expect-error`
+     just to make the check pass. For mocks, use `vi.mocked()`.
+   - Type errors only in other files (e.g. the implementation) are not yours
+     to fix. List them in your report.
+2. Run `npm test` once. New tests are expected to fail if the feature is not
+   implemented yet. They must not fail because of syntax errors or wrong
+   imports.
