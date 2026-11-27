@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: "Sportverein Grünwiese – Startseite",
   description:
     "Willkommen beim Sportverein Grünwiese. Informationen zu Mitgliedschaft, Training und Veranstaltungen.",
-};
+};  
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
