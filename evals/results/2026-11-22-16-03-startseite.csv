@@ -1,2 +1,0 @@
-task,run,pass,acceptance,unit,typecheck,lint,migrations,exit,minutes,steps,tool_calls,sessions,compactions,tokens_input,tokens_output,tokens_reasoning,tokens_cache_read,tokens_cache_write,tokens_total,cost,session_id
-impressum,1,false,,false,true,false,false,exit 0,10.00,43,68,2,0,258,28683,0,1155750,84963,1269654,0.1347,ses_dfc0048f6ffezV1jGoutSklmDG
