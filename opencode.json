@@ -1,6 +1,11 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "model": "opencode-go/qwen3.7-plus",
+  "formatter": {
+    "prettier": {
+      "extensions": [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".css", ".json"]
+    }
+  },
   "permission": {
     "edit": {
       "*.test.ts": "deny",
@@ -14,9 +19,17 @@
       "*.next/*": "deny",
       "*.env": "deny",
       "*.env.*": "deny",
+      "*eslint.config.*": "deny",
+      "*.prettierrc*": "deny",
+      "*.prettierignore": "deny",
+      "*next.config.*": "ask",
       "*package.json": "ask",
       "*package-lock.json": "ask",
-      "*vitest.config.ts": "deny"
+      "*vitest.config.ts": "deny",
+      "*vitest.setup.ts": "deny",
+      "*agent-logs/verification-logs/*-logs/*": "deny",
+      "*agent-logs/performance-logs/*": "deny",
+      "*agent-logs/client-requests/*": "ask"
     },
     "bash": {
       "*": "ask",
@@ -26,8 +39,22 @@
       "cat *": "allow",
       "head *": "allow",
       "tail *": "allow",
+      "wc *": "allow",
+      "grep *": "allow",
+      "rg *": "allow",
+      "date": "allow",
+      "date *": "allow",
+      "mkdir *": "allow",
+      "git status*": "allow",
+      "git diff*": "allow",
+      "git log*": "allow",
       "npm run verify*": "allow",
+      "npm run perf*": "allow",
       "npx tsc*": "deny",
+      "npx eslint*": "deny",
+      "npx prettier*": "deny",
+      "npm run lint*": "deny",
+      "npm run format*": "deny",
       "npm run build*": "deny",
       "npm test*": "deny",
       "npx vitest*": "deny",

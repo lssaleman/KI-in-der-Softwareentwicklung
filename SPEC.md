@@ -1,7 +1,7 @@
 # SPEC.md
 
-**Version:** 0.1
-**Last updated:** 2026-10-21
+**Version:** 0.2
+**Last updated:** 2026-11-20
 ---
 
 ## 1. Purpose
@@ -20,6 +20,8 @@ also offers a simple way to sign up for a trial training session.
 | Sponsors | Find out quickly which teams play in a high league and are worth sponsoring. |
 | Club board (client) | Keep content such as events and news up to date without programming knowledge, and present the club and its sponsors in a positive light. |
 
+This table explains the background of the requirements. Only the acceptance
+criteria in sections 3 and 4 are binding.
 
 ## 3. Functional Requirements
 
@@ -27,7 +29,9 @@ also offers a simple way to sign up for a trial training session.
 
 - **Description:** The start page is the first thing visitors see when they open
   the website, so it must be easy to understand at a glance. It presents the club
-  with a banner, which usually contains pictures or videos of the club. Visitors
+  with a banner, which usually contains pictures or videos of the club. Videos
+  in the banner do not play automatically; they load and start only when the
+  visitor clicks play (see N3 and N5). Visitors
   must immediately see how they can join the club. Below the banner, the start
   page shows the latest club news, the upcoming events and a way to reach every
   sport the club offers.
@@ -35,9 +39,11 @@ also offers a simple way to sign up for a trial training session.
   website quickly. Prospective members in particular need a direct way to join.
 - **Priority:** Must
 - **Acceptance criteria:**
-  - [ ] The membership application form can be reached from the start page with
-        one click.
-  - [ ] The start page contains no more than five main sections.
+  - [ ] A clear way to join the club (e.g. a "Mitglied werden" page with the
+        trial training request from F4 and the club's contact details) can be
+        reached from the start page with one click.
+  - [ ] The start page contains no more than five main sections. The way to
+        join, the sponsors, the top bar and the footer do not count.
   - [ ] Every sport the club offers can be reached from the start page.
   - [ ] Events are shown in chronological order, the earliest first.
   - [ ] Each event shows its name and its date in German format (DD.MM.YYYY).
@@ -49,31 +55,34 @@ also offers a simple way to sign up for a trial training session.
 
 - **Description:** The top bar is visible to visitors on every page, so it should
   have an unobtrusive design. From the top bar, visitors can reach every subpage of
-  the website, most importantly every sport the club offers. Even though every
+  the website, most importantly every sport the club offers. Only the legal
+  notice and the privacy policy are linked in the footer instead (see N1).
+  Even though every
   subpage is reachable, the menus must stay clearly structured. Only add the menus
   that are actually needed: if the club offers four sports or fewer, show them
-  directly in the top bar instead of grouping them in a menu. The Top Bar should
-  also have the icon of the club, which navigates the visitor back to the start page.
+  directly in the top bar instead of grouping them in a menu. The top bar also
+  shows the club's logo (or its name if there is no logo), which leads back to
+  the start page.
 - **Rationale:** Visitors use the top bar to get quickly to the page that interests
   them. Without it, or with a cluttered one, they cannot find their way around.
 - **Priority:** Must
 - **Acceptance criteria:**
   - [ ] The top bar is shown on every page of the website.
-  - [ ] Every subpage can be reached from the top bar with at most two clicks.
+  - [ ] Every subpage except the legal notice and the privacy policy can be
+        reached from the top bar with at most two clicks.
   - [ ] If the club offers four sports or fewer, each sport is shown directly in
         the top bar.
   - [ ] If the club offers more than four sports, they are grouped in one menu.
   - [ ] There are no empty menus and no links to pages that do not exist.
   - [ ] The page the visitor is currently on is highlighted in the top bar.
-  - [ ] The club name or logo in the top bar leads back to the start page.
-  - [ ] The top bar is fully usable on a screen width of 320 px.
+  - [ ] The club logo in the top bar (or the club name if there is no logo)
+        leads back to the start page.
   - [ ] All entries can be reached and opened with the keyboard, with a visible focus.
-  - [ ] Club icon navigates the visitor back the start page
 
 ### F3: Sponsors
 
 - **Description:** If a club has sponsors, they are presented on the website.
-  They appear at the bottom of the page, so they do not distract visitors from
+  They appear at the bottom of every page, so they do not distract visitors from
   the main content. If a sponsor has a website, visitors can click on the sponsor
   to get there.
 - **Rationale:** Sponsors expect to be acknowledged on the club's website in
@@ -82,7 +91,6 @@ also offers a simple way to sign up for a trial training session.
 - **Priority:** Should
 - **Acceptance criteria:**
   - [ ] Every sponsor provided by the client is shown.
-  - [ ] Sponsors are shown at the bottom of the page, after the main content.
   - [ ] If the club has no sponsors, no sponsor section is shown.
   - [ ] Each sponsor is shown with its logo if the client provided one and
         confirmed that it may be used. Otherwise, the sponsor's name is shown.
@@ -105,8 +113,6 @@ also offers a simple way to sign up for a trial training session.
 - **Priority:** Must
 - **Acceptance criteria:**
   - [ ] Every sport the club offers has its own sport page.
-  - [ ] Every sport page uses the same top bar, footer, colours and fonts as the
-        rest of the website.
   - [ ] Every sport page has an area for the department's own texts, pictures
         and videos.
   - [ ] Every sport page lists all teams of the department.
@@ -127,7 +133,13 @@ also offers a simple way to sign up for a trial training session.
 - **Rationale:** Departments want to keep their page up to date themselves
   without asking the club board for every change. This keeps the information
   current and takes work off the board.
-- **Priority:** Could
+- **Priority:** Optional – build only if the client explicitly asks for it.
+  When a task includes sport pages (F4) and the client has not mentioned
+  content editing, ask whether F5 is wanted before you start. Point out that
+  F5 requires sign-in, per-department permissions and uploads and takes
+  considerably more effort than F4. If the client wants F5, suggest building
+  it in a separate run after F4. Without a clear yes, F5 is not implemented
+  and not tested.
 - **Acceptance criteria:**
   - [ ] Department members can change texts, pictures and videos on their own
         sport page without programming knowledge.
@@ -243,11 +255,10 @@ also offers a simple way to sign up for a trial training session.
   - [ ] Unless the client specifies otherwise, buttons, cards and pictures have
         rounded corners.
   - [ ] If the client specifies colours or shapes, these are used instead.
-  - [ ] The same colours and shapes are used consistently on every page.
+  - [ ] The same colours, fonts and shapes are used consistently on every page.
   - [ ] All colour combinations still meet the contrast requirements of N3.
 
 ## 5. Out of Scope
 
-- Login and user accounts
-- Role and permission management
-- Connection to a real database
+- Setting up or connecting to a hosted or production database.
+  A local database for development (e.g. `supabase start`) is allowed.
