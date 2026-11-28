@@ -9,7 +9,7 @@ import {
   stopSponsorRotation,
   pauseSponsorRotation,
   resumeSponsorRotation,
-} from "@/app/components/SponsorenListe";
+} from "@/app/utils/sponsoren";
 
 import type { Sponsor } from "@/app/lib/data/sponsoren";
 
