@@ -1,3 +1,5 @@
+//ausführbar mit npm run test-demo-env
+
 import { loadDemoEnv } from "./demo-db.ts"
 import { createClient } from "@supabase/supabase-js"
 import * as net from "node:net"
@@ -27,8 +29,8 @@ async function testSupabaseApi(url: string, key: string): Promise<{ ok: boolean;
     const supabase = createClient(url, key)
     const { data, error } = await supabase.from("_connection_test").select("*").limit(1)
     
-    // Wenn Tabelle nicht existiert (42P01), ist die Verbindung trotzdem OK
-    if (error && error.code === "42P01") {
+    // Wenn Tabelle nicht existiert (PGRST205 oder 42P01), ist die Verbindung trotzdem OK
+    if (error && (error.code === "PGRST205" || error.code === "42P01")) {
       return { ok: true }
     }
     if (error) {

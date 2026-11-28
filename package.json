@@ -19,7 +19,7 @@
     "format": "prettier --write .",
     "verify": "node .opencode/scripts/verify.mjs",
     "eval": "tsx evals/run.ts",
-    "test:demo-env": "tsx scripts/test-demo-env.ts"
+    "test-demo-env": "tsx scripts/test-demo-env.ts"
   },
   "dependencies": {
     "@opencode-ai/plugin": "1.19.4",
