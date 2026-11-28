@@ -1,8 +1,23 @@
-# Sponsoren-Rotation implementieren
+# Feature: Automatische Sponsoren-Rotation
 
 Implementiere eine automatische Rotation für die Sponsorenanzeige, da aktuell zu viele Sponsoren gleichzeitig nebeneinander angezeigt werden.
 
-## Vorgegebene Methodenköpfe (verbindlich)
+## Dateipfade
+
+- **Sponsor-Daten:** `app/lib/data/sponsoren.ts`
+- **Zu erweiternde Komponente:** `app/components/SponsorenListe.tsx`
+
+## Datenstruktur
+
+```typescript
+export interface Sponsor {
+  name: string;
+  logo: string;
+  website: string;
+}
+```
+
+## Verbindliche Methodenköpfe
 
 - `getVisibleSponsors(sponsors, visibleCount, currentIndex)`
 - `rotateSponsors(currentIndex, totalSponsors, visibleCount)`
@@ -19,16 +34,14 @@ Implementiere eine automatische Rotation für die Sponsorenanzeige, da aktuell z
 - Nach dem letzten Sponsor wieder von vorne beginnen.
 - Bei wenigen Sponsoren keine Rotation durchführen.
 - Rotation bei Mouseover oder Interaktion pausieren und fortsetzen.
-- Bestehende Sponsoren-Daten und Verknüpfungen erhalten.
-- Für alle vorgegebenen Methoden eigene Vitest-Tests erstellen.
-- Sichtbarkeit, Rotation, Endlosschleife, Pause, Fortsetzung und Stopp testen.
-- Zeitabhängige Tests mit `vi.useFakeTimers()` durchführen.
+- Bestehende Sponsor-Daten und Verknüpfungen erhalten.
+- Barrierefreiheit und Performance berücksichtigen.
 
 ## Vorgehensweise
 
-- Bestehende Sponsoren-Komponente analysieren.
+- Bestehende Sponsoren-Komponente und Datenstruktur analysieren.
 - Vorgegebene Methoden implementieren und integrieren.
-- Passende Vitest-Tests selbstständig erstellen.
-- Erst nach vollständiger Implementierung alle Tests ausführen.
+- Bestehende Funktionen nicht beeinträchtigen.
+- Implementierung vollständig abschließen, bevor Tests ausgeführt werden.
+- Anschließend die bereitgestellten automatisierten Vitest-Tests ausführen.
 - Fehler beheben und Tests erneut ausführen.
-- Bestehende Funktionen und Verknüpfungen dürfen nicht beeinträchtigt werden.
