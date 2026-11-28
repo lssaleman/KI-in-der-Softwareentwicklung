@@ -5,7 +5,7 @@ Implementiere eine automatische Rotation für die Sponsorenanzeige, da aktuell z
 ## Dateipfade
 
 - **Sponsor-Daten:** `app/lib/data/sponsoren.ts`
-- **Zu erweiternde Komponente:** `app/components/SponsorenListe.tsx`
+- **Zu erweiternde Komponente:** `app/components/sponsoren.ts`
 
 ## Datenstruktur
 
