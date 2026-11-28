@@ -7,30 +7,20 @@ export type EvalTask = {
 }
 
 export const TASKS: EvalTask[] = [
-    {
-    id: "startseite",
-    size: "L",
-    start: "startseite",
-    minutes: 40,
-    check: {
-      hidden: false,
-      files: ["evals/tasks/startseite/check.test.ts"]
-    }
-  }, {
-    id: "impressum",
-    size: "S",
-    start: "startseite",
-    minutes: 15,
-    check: {
-      hidden: false,
-      files: ["evals/tasks/impressum/check.test.ts"]
-    }
-  },
   {
     id: "helloworld",
     size: "S",
     start: "tests-startzustand",
     minutes: 3,
+    check: {
+      hidden: true
+    }
+  },
+  {
+    id: "rotation",
+    size: "M",
+    start: "tests-startzustand",
+    minutes: 15,
     check: {
       hidden: true
     }
