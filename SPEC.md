@@ -256,9 +256,4 @@ criteria in sections 3 and 4 are binding.
         rounded corners.
   - [ ] If the client specifies colours or shapes, these are used instead.
   - [ ] The same colours, fonts and shapes are used consistently on every page.
-  - [ ] All colour combinations still meet the contrast requirements of N3.
-
-## 5. Out of Scope
-
-- Setting up or connecting to a hosted or production database.
-  A local database for development (e.g. `supabase start`) is allowed.
+  - [ ] All colour combinations still meet the contrast requirements of N3
