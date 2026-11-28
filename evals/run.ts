@@ -39,7 +39,7 @@ import { loadDemoEnv, runSupabase, tail } from '../scripts/demo-db.ts'
 import { TASKS, type EvalTask } from './tasks.ts'
 
 const ROOT = process.cwd()
-const HARNESS_FILES = ['AGENTS.md', 'opencode.json', '.opencode']
+const HARNESS_FILES = ['AGENTS.md', 'opencode.json', '.opencode', 'SPEC.md']
 
 type Options = {
   harness: string
