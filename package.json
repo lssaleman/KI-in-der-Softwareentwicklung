@@ -42,6 +42,7 @@
     "eslint": "9.39.5",
     "jsdom": "26.1.0",
     "prettier": "3.10.1",
+    "supabase": "^3.4.0",
     "tsx": "^4.23.15",
     "typescript": "5.9.3",
     "vitest": "4.1.12"
